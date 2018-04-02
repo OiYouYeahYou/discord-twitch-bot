@@ -5,21 +5,28 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "author": "yuki",
+    "author": "OiYouYeahYou",
     "license": "GPL-3.0",
-
     "dependencies": {
         "discord.js": "11.0.0"
     },
-    "devDependencies": {},
-
+    "devDependencies": {
+        "eslint": "^4.19.1",
+        "gulp": "^3.9.1",
+        "gulp-sourcemaps": "^2.6.1",
+        "gulp-tslint": "^8.1.2",
+        "gulp-typescript": "^3.2.3",
+        "tslint": "^5.9.0",
+        "typescript": "^2.6.1",
+        "@types/node": "^9.3.0"
+    },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/fuyuneko/discord-twitch-bot.git"
+        "url": "git+https://github.com/OiYouYeahYou/discord-twitch-bot.git"
     },
     "bugs": {
-        "url": "https://github.com/fuyuneko/discord-twitch-bot/issues"
+        "url": "https://github.com/OiYouYeahYou/discord-twitch-bot/issues"
     },
-    "homepage": "https://github.com/fuyuneko/discord-twitch-bot#readme",
+    "homepage": "https://github.com/OiYouYeahYou/discord-twitch-bot#readme",
     "description": ""
 }

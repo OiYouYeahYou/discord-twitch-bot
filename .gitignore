@@ -44,3 +44,7 @@ init
 
 # Backup
 *.bak
+
+.DS_Store
+config.json
+lib/
