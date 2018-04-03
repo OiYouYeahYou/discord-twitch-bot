@@ -16,9 +16,4 @@ export const headers = {
 	Accept: "application/vnd.twitchtv.v3+json"
 }
 
-export const saveOpt = { save: true }
-export const exitOpt = { exit: true }
-
-module.exports = {
-	timeout, host, headers, token, interval, saveOpt, exitOpt,
-};
+export const channelPath = __dirname + "/.channels";

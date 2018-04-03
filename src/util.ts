@@ -1,12 +1,12 @@
-import { IServer, IExitHandler, WithNameProp } from "./types";
+import { IServer, WithNameProp } from "./types";
 import { Guild } from "discord.js";
 
-const { format } = require( 'util' );
-const { writeFileSync, readFileSync } = require( 'fs' );
+import { format } from 'util';
+import { readFileSync } from 'fs';
+import { channelPath } from "./constants";
 
-const channelPath = __dirname + "/.channels";
-const leadingZero = ( n ) => n < 10 ? '0' + n : n;
-const tidyString = str => str.toLowerCase().trim()
+const leadingZero = ( n: number ) => n < 10 ? '0' + n : n;
+const tidyString = ( str: string ) => str.toLowerCase().trim()
 
 // adds a timestamp before msg/err
 export function print( ...args ) {
@@ -15,31 +15,19 @@ export function print( ...args ) {
 	var m = leadingZero( date.getMinutes() );
 	var s = leadingZero( date.getSeconds() );
 
+	// @ts-ignore
 	console.log( `[${ h }:${ m }:${ s }] ${ format( ...args ) }` );
 }
 
-export function getByName<T extends WithNameProp>( array: T[], value: string ): T {
+export function getByName<T extends WithNameProp>(
+	array: T[], value: string
+): T {
 	const v = tidyString( value )
 	for ( const item of array ) {
 		const { name } = item
 		if ( name && tidyString( name ) === v )
 			return item;
 	}
-}
-
-export function exitHandler( servers: IServer[], opt: IExitHandler, err: any ) {
-	if ( err )
-		print( err );
-
-	if ( opt.save ) {
-		print( `Saving channels to ${ channelPath } before exiting` );
-		print( JSON.stringify( servers ) );
-		writeFileSync( channelPath, JSON.stringify( servers, null, 4 ) );
-		print( "Done" );
-	}
-
-	if ( opt.exit )
-		process.exit();
 }
 
 export function getPersistence(): IServer[] {

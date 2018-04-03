@@ -12,8 +12,8 @@ export interface IServer {
 	prefix: string
 	lastPrefix?: string
 	role: string
-	discordChannels: any[],
-	twitchChannels: any[]
+	discordChannels: string[],
+	twitchChannels: ITwitchChannel[]
 }
 
 export interface IExitHandler {
@@ -28,4 +28,12 @@ export interface SendableChannel {
 
 export interface WithNameProp {
 	name: string
+}
+
+export type APIcallback = ( server: IServer, twitchChannel?, response?) => any
+
+export interface ITwitchChannel {
+	name: string
+	timestamp: number
+	online: boolean
 }
