@@ -6,6 +6,7 @@ import { hasAuthorityForCommand, unauthorised } from '../authority'
 import Module from './Module'
 import AListItem, { IAbstractListItem, ListItemInfo } from './AListItem'
 import { Message } from 'discord.js';
+import { IServer } from '../types';
 
 export default class List {
 	/** Contains Command instances */
@@ -113,8 +114,13 @@ export default class List {
 		return items.sort().join( '\n' )
 	}
 
-	async run( message: Message, text: string, prefix: string ) {
-		const req = new Request( this, message, prefix, text )
+	async run(
+		message: Message,
+		server: IServer,
+		text: string,
+		prefix: string
+	) {
+		const req = new Request( this, server, message, prefix, text )
 		const commandString = removePrefix( prefix, text )
 
 		await this.commandRunner( req, commandString )

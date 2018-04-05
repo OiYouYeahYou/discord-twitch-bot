@@ -1,5 +1,5 @@
 import { IServer, WithNameProp } from "./types";
-import { Guild, Message, VoiceChannel, Snowflake } from 'discord.js'
+import { Guild, Message } from 'discord.js'
 
 import { format } from 'util';
 import { readFileSync } from 'fs';
@@ -108,13 +108,8 @@ export async function destructingReply( message: Message, text: string ) {
  * @param err
  */
 export async function somethingWentWrong( message: Message, err: any ) {
-	const id = randomString( 6 )
-
-	if ( err instanceof Error )
-		err.message += ` (Event: ${ id })`
-
 	console.log( err )
-	return destructingReply( message, `Something went wrong (Event: ${ id })` )
+	return destructingReply( message, `Something went wrong` )
 }
 
 async function timer( time: number ) {
@@ -169,3 +164,6 @@ export function removePrefix( pfx: string, text: string ) {
 	return text.slice( pfx.length ).trim()
 }
 
+export const stringSort = ( a, b ) => a.name.toLowerCase().localeCompare(
+	b.name.toLowerCase()
+)

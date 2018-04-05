@@ -1,22 +1,26 @@
 import { Message } from "discord.js"
 import { destructingReply, somethingWentWrong } from "../util"
 import List from "./List"
+import { IServer } from "../types";
 
 
 export default class Request {
 	constructor(
 		list: List,
+		server: IServer,
 		message: Message,
 		prefix: string,
 		text: string
 	) {
 		this.list = list
+		this.server = server
 		this.message = message
 		this.prefix = prefix
 		this.text = text
 	}
 
 	readonly list: List
+	readonly server: IServer
 	readonly message: Message
 	readonly prefix: string
 	readonly text: string

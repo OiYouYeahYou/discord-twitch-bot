@@ -10,7 +10,6 @@ export interface IServer {
 	name: string
 	id: string
 	prefix: string
-	lastPrefix?: string
 	role: string
 	discordChannels: string[],
 	twitchChannels: ITwitchChannel[]
@@ -36,4 +35,22 @@ export interface ITwitchChannel {
 	name: string
 	timestamp: number
 	online: boolean
+}
+
+export interface ITwtichResponse {
+	stream: {
+		channel: {
+			display_name: string
+			url: string
+			game: string
+			status: string
+			logo: string
+			followers: number
+		}
+		preview: {
+			large: string
+		}
+		viewers: number
+		created_at: string
+	}
 }

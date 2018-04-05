@@ -3,7 +3,7 @@ import { Client, RichEmbed } from 'discord.js';
 
 import { print, getPersistence } from './util';
 import { token, interval, timeout, host, headers } from './constants';
-import { IServer, SendableChannel, APIcallback, ITwitchChannel } from './types';
+import { IServer, SendableChannel, APIcallback, ITwitchChannel, ITwtichResponse } from './types';
 import { messageReceived } from './messageHandling';
 
 export const servers: IServer[] = getPersistence();
@@ -57,6 +57,7 @@ function getHandler(
 	res.on( 'end', () => {
 		try {
 			const response = JSON.parse( body );
+			console.log( response );
 
 			if ( response.status == 404 )
 				callback( server );
@@ -72,7 +73,9 @@ function getHandler(
 
 function x( res, twitchChannel: ITwitchChannel, stream: string ) {
 	return (
-		res && !twitchChannel.online && stream
+		res
+		&& stream
+		&& !twitchChannel.online
 		&& ( twitchChannel.timestamp + timeout <= Date.now() )
 	)
 }
@@ -93,7 +96,7 @@ async function apiCallback(
 	}
 
 	try {
-		const guild = bot.guilds.find( 'name', server.name );
+		const guild = bot.guilds.find( 'id', server.id );
 		const { discordChannels } = server
 		const { channels } = guild
 		const embed = Embed( res )
@@ -109,7 +112,7 @@ async function apiCallback(
 		}
 		else
 			for ( const discordChannel of discordChannels ) {
-				const channel = channels.find( 'name', discordChannel );
+				const channel = channels.find( 'id', discordChannel );
 				if ( channel )
 					// @ts-ignore
 					await sendEmbed( channel, embed );
@@ -124,17 +127,18 @@ async function sendEmbed( channel: SendableChannel, embed: RichEmbed ) {
 	print( `Sent embed to channel '${ channel.name }'.` )
 }
 
-function Embed( res ) {
+function Embed( res: ITwtichResponse ) {
 	const { stream } = res
-	const { channel } = stream
-	const { display_name, url, game, status } = channel
-	const { logo, viewers, followers, preview } = channel
+	const { channel, preview, viewers, created_at } = stream
+	const { display_name, url, game, status, logo, followers } = channel
+	const start = new Date( created_at )
 
 	const embed = new RichEmbed()
 		.setTitle( display_name.replace( /_/g, '\\_' ) )
 		.setDescription( `**${ status }**\n${ game }` )
 		.addField( 'Viewers', viewers, true )
 		.addField( 'Followers', followers, true )
+		.addField( 'Start', start, true )
 		.setColor( '#9689b9' )
 		.setURL( url )
 		.setImage( preview.large )

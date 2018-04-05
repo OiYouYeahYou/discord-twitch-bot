@@ -1,10 +1,16 @@
 import { IConfig } from "./types";
 
 const {
-	discordToken = '',
-	twitchClientID = '',
+	discordToken,
+	twitchClientID,
 	intervalString = 180
 }: IConfig = require( '../config.json' )
+
+if ( !twitchClientID )
+	throw new Error( 'No Twitch client-id' );
+
+if ( !discordToken )
+	throw new Error( 'No Discord Token' );
 
 export const token = discordToken
 export const interval = Number( intervalString ) * 1000;
@@ -16,4 +22,4 @@ export const headers = {
 	Accept: "application/vnd.twitchtv.v3+json"
 }
 
-export const channelPath = __dirname + "/.channels";
+export const channelPath = __dirname + "/../.channels";

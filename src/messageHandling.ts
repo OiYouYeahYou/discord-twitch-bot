@@ -1,123 +1,110 @@
 import { Message } from "discord.js";
-import { getServerConfig, getByName } from "./util";
-import { IServer } from "./types";
+import {
+	getServerConfig, getByName, isPrefixed, splitByFirstSpace, stringSort
+} from "./util";
 import { callApi, tick, servers } from ".";
-
+import List from "./classes/List";
+import Request from "./classes/Request";
+import { exitHandler } from "./exitHandling";
 
 export function messageReceived( message: Message ) {
-	const { guild, content } = message
+	console.log( message );
+	const { guild } = message
 
 	if ( !guild )
 		return;
 
 	const server = getServerConfig( servers, guild );
+	const { prefix } = server;
+	const content = message.content.trim()
 
-	if ( content[ 0 ] == server.prefix ) {
-		if ( content.substring( 1, 7 ) == 'remove' )
-			return remove( message, server, content );
-		else if ( content.substring( 1, 4 ) == 'add' )
-			return add( message, server, content )
-		else if ( content.substring( 1, 5 ) == 'list' )
-			return list( message, server );
-		else if ( content.substring( 1, 10 ) == 'configure' )
-			return configure( message, server, content )
-		else
-			return usage( message, server );
-	}
-	else if ( content[ 0 ] == server.lastPrefix )
-		return oldPrefix( message, server );
+	if ( isPrefixed( prefix, content ) )
+		return main.run( message, server, content, prefix )
 }
 
-function remove( message: Message, server: IServer, content: string ) {
-	if ( !hasPermissionRole( message, server ) )
-		return message.reply(
-			`you're lacking the role _${ server.role }_.`
-		);
+const main = new List()
+main.addCommand( 'remove', { func: remove, help: '' } )
+main.addCommand( 'add', { func: add, help: '' } )
+main.addCommand( 'list', { func: list, help: '' } )
+main.addCommand( 'tick', { func: callTick, help: '' } )
 
-	const streamer = content.slice( 7 ).trim();
+const config = main.addModule( 'config', { help: '' } )
+config.addCommand( 'list', { func: configList, help: '' } )
+config.addCommand( 'prefix', { func: configPfx, help: '' } )
+config.addCommand( 'role', { func: configRole, help: '' } )
+config.addCommand( 'save', { func: configSave, help: '' } )
+
+const configChannel = main.addModule( 'channel', { help: '' } )
+configChannel.addCommand( 'add', { func: addChannel, help: '' } )
+configChannel.addCommand( 'remove', { func: rmChannel, help: '' } )
+
+function remove( req: Request, args: string ) {
+	const { server } = req;
+	const [ streamer ] = splitByFirstSpace( args );
 	const channel = getByName( server.twitchChannels, streamer );
 
 	if ( !channel )
-		return message.reply( `${ streamer } isn't in the list.` );
+		return req.send( `${ streamer } isn't in the list.` );
 
 	server.twitchChannels = server.twitchChannels.filter(
 		channel => channel.name != streamer
 	);
 
-	return message.reply( `Removed ${ streamer }.` );
+	return req.send( `Removed ${ streamer }.` );
 }
 
-function add( message: Message, server: IServer, content: string ) {
-	if ( !hasPermissionRole( message, server ) )
-		return message.reply(
-			`you're lacking the role _${ server.role }_.`
-		);
-
-	const name = content.slice( 4 ).trim();
-	const channelObject = {
-		name, timestamp: 0,
-		online: false
-	};
+function add( req: Request, content: string ) {
+	const { server } = req;
+	const [ name ] = splitByFirstSpace( content );
+	const channelObject = { name, timestamp: 0, online: false };
 
 	const channel = getByName( server.twitchChannels, name );
-	if ( !channel )
-		return message.reply( name + ' is already in the list.' );
+	if ( channel )
+		return req.send( name + ' is already in the list.' );
 
 	callApi( server, channelObject, ( _, __, res ) => {
 		if ( !res )
-			return message.reply( name + ' doesn\'t seem to exist.' );
+			return req.send( name + ' doesn\'t seem to exist.' );
 
 		server.twitchChannels.push( channelObject );
 
 		tick();
 
-		return message.reply( `Added ${ name }.` );
+		return req.send( `Added ${ name }.` );
 	}, false );
 }
 
-function list( message: Message, { twitchChannels }: IServer ) {
-	if ( !twitchChannels.length )
-		return message.reply( 'The list is empty.' );
+function list( req: Request ) {
+	const { twitchChannels } = req.server;
 
-	const channels = twitchChannels.map( i => i ).sort(
-		( a, b ) => a.name.toLowerCase().localeCompare( b.name.toLowerCase() )
-	)
+	if ( !twitchChannels.length )
+		return req.send( 'The list is empty.' );
+
+	const channels = Array.from( twitchChannels ).sort( stringSort )
 	const offline = [];
 	const live = []
 
 	for ( const { online, name } of channels )
 		( online ? live : offline ).push( name )
 
-	const msg = `\nOnline:\n\`\`\`${ live.join( ', ' ) }\`\`\`\nOffline:\n\`\`\`${ offline.join( ', ' ) }\`\`\``
+	const liveString = live.join( ', ' )
+	const offlineString = offline.join( ', ' )
 
-	return message.reply( msg.replace( /_/g, '\\_' ) );
+	return req.send(
+		`\n\nOnline:\n`
+		+ liveString
+		+ `\n\nOffline:\n`
+		+ offlineString
+	);
 }
 
-function configure( message: Message, server: IServer, content: string ) {
-	const { guild } = message
-	if ( guild.owner != message.member )
-		return message.reply( 'You are not the server owner.' );
-
-	if ( content.substring( 11, 15 ) == 'list' )
-		return configureList( message, server );
-	else if ( content.substring( 11, 17 ) == 'prefix' )
-		return configurePrefix( message, server, content );
-	else if ( content.substring( 11, 15 ) == 'role' )
-		return configureRole( message, server, content )
-	else if ( content.substring( 11, 18 ) == 'channel' ) {
-		if ( content.substring( 19, 22 ) == 'add' )
-			return configureAdd( message, server, content );
-		else if ( content.substring( 19, 25 ) == 'remove' )
-			return configureRemove( message, server, content );
-		else
-			return missingArguments( message );
-	}
-	else
-		return configureUsage( message, server );
+async function callTick( req: Request ) {
+	tick()
+	return req.delete()
 }
 
-function configureList( message: Message, server: IServer ) {
-	const { role, discordChannels, prefix } = server
+function configList( req: Request ) {
+	const { role, discordChannels, prefix } = req.server
 	const msg = []
 
 	msg.push( '```\n' )
@@ -125,121 +112,99 @@ function configureList( message: Message, server: IServer ) {
 	msg.push( 'role      ' + role )
 
 	const space = '          '
-	msg.push(
-		discordChannels.map( c => space + c ).join( ',\n' )
-	)
+	msg.push( discordChannels.map( c => space + c ).join( ',\n' ) )
 	msg.push( '```' );
 
-	return message.reply( msg.join( '\n' ) )
+	return req.send( msg.join( '\n' ) )
 }
 
-function configurePrefix( message: Message, server: IServer, content: string ) {
+function configPfx( req: Request, args: string ) {
+	const { server } = req;
 	const { prefix } = server
-	let newPrefix = content.substring( 18, 19 );
+	let [ newPrefix ] = splitByFirstSpace( args );
 
 	if ( newPrefix.replace( /\s/g, '' ).length === 0 )
-		return missingArguments( message );
+		return missingArguments( req );
 
 	else if ( newPrefix == prefix )
-		return message.reply( 'Prefix already is ' + prefix );
+		return req.send( 'Prefix already is ' + prefix );
 
 	else {
 		server.prefix = newPrefix;
-		server.lastPrefix = prefix;
-		return message.reply( 'Changed prefix to ' + prefix );
+		return req.send( 'Changed prefix to ' + prefix );
 	}
 }
 
-function configureRole( message: Message, server: IServer, content: string ) {
-	const newRole = content.substring( 16 )
+function configRole( req: Request, args: string ) {
+	const newRole = args
 
 	if ( newRole.replace( /\s/g, '' ).length === 0 )
-		return missingArguments( message );
+		return missingArguments( req );
 
 	else {
+		const { server } = req;
+
 		server.role = newRole;
-		return message.reply(
-			'Changed role to ' + server.role
-		);
+		return req.send( 'Changed role to ' + server.role );
 	}
 }
 
-function configureAdd( message: Message, server: IServer, content: string ) {
-	const channel = content.substring( 23 );
-
-	if ( channel.replace( /\s/g, '' ).length === 0 )
-		return missingArguments( message );
-
-	else if ( message.guild.channels.exists( 'name', channel ) ) {
-		server.discordChannels.push( channel );
-		return message.reply( `Added ${ channel } to list of channels to post in.` );
-	}
-
-	else {
-		return message.reply( channel + ' does not exist on this server.' );
-	}
+async function configSave( req: Request, args: string ) {
+	exitHandler( servers, { save: true } )
+	await req.send( 'Done' )
 }
 
-function configureRemove( message: Message, server: IServer, content: string ) {
-	const { discordChannels } = server
-	let channel = content.substring( 26 );
-	if ( channel.replace( /\s/g, '' ).length === 0 )
-		return missingArguments( message );
+function addChannel( req: Request, args: string ) {
+	const { channels } = req.message.mentions
+	const { size } = channels
 
-	for ( let i = discordChannels.length; i >= 0; i-- ) {
-		if ( discordChannels[ i ] == channel ) {
-			discordChannels.splice( i, 1 );
-			return message.reply(
-				`Removed ${ channel } from list of channels to post in.`
+	if ( size ) {
+		for ( const [ , channel ] of channels )
+			req.server.discordChannels.push( channel.id )
+
+		return req.send( 'Done' )
+	}
+
+	const channel = args.replace( /\s/g, '' ).replace( /\s/g, '-' )
+
+	if ( req.guild.channels.exists( 'name', channel ) ) {
+		req.server.discordChannels.push( channel );
+		return req.send( `Added ${ channel } to list of channels to post in.` );
+	}
+
+	return req.send( channel + ' does not exist on this server.' );
+}
+
+function rmChannel( req: Request, args: string ) {
+	const { discordChannels } = req.server
+	const { channels } = req.message.mentions
+	const { size } = channels
+
+	if ( size ) {
+		for ( const [ , channel ] of channels )
+			req.server.discordChannels = discordChannels.filter(
+				ch => ch != channel.id
 			);
-		}
+
+		return req.send( 'Done' )
 	}
-	return message.reply(
-		channel + ' does not exist in list.'
+
+	if ( !args )
+		return missingArguments( req )
+
+	const channelName = args.replace( /\s/g, '' ).replace( /\s/g, '-' )
+	const channel = req.guild.channels.find( 'name', channelName )
+
+	if ( !channel )
+		return req.send( 'No Channel found by the name' + channelName )
+
+	req.server.discordChannels = discordChannels.filter( ch => ch != channel.id );
+
+	return req.send(
+		`Removed ${ channelName } from list of channels to post in.`
 	);
 }
 
-function missingArguments( message: Message ) {
-	return message.reply( 'Please specify an argument for channel' );
-}
-
-function configureUsage( message: Message, { prefix }: IServer ) {
-	return message.reply( [
-		'```',
-		`Usage: ${ prefix }configure OPTION [SUBOPTION] VALUE`,
-		`Example: ${ prefix }configure channel add example`,
-		'',
-		'Options:',
-		'  list    - List current config',
-		'  prefix  - Character to use in front of commands',
-		'  role    - Role permitting usage of add and remove',
-		'  channel - Channel(s) to post in, empty list will use the first channel',
-		'  add     - Add a discord channel to the list',
-		'  remove  - Remove a discord channel from the list',
-		'```'
-	].join( '\n' ) );
-}
-
-function usage( message: Message, { prefix }: IServer ) {
-	return message.reply(
-		`Usage:\n ${ prefix }[configure args|list|add channel_name|remove channel_name]`
-	);
-}
-
-function oldPrefix( message: Message, server: IServer ) {
-	return message.reply(
-		`The prefix was changed from \`${ server.lastPrefix }\` to \`${ server.prefix }\`. Please use the new prefix.`
-	);
-}
-
-function hasPermissionRole( message: Message, server: IServer ) {
-	try {
-		return (
-			message.guild.owner != message.member
-			|| message.member.roles.exists( 'name', server.role )
-		);
-	}
-	catch ( err ) {
-		return false
-	}
+function missingArguments( req: Request ) {
+	return req.send( 'Please specify an argument for channel' );
 }

@@ -12,7 +12,11 @@ process.on( 'SIGINT', e => exitHandler( servers, exitOpt, e ) );
 process.on( 'SIGTERM', e => exitHandler( servers, exitOpt, e ) );
 process.on( 'uncaughtException', e => exitHandler( servers, exitOpt, e ) );
 
-export function exitHandler( servers: IServer[], opt: IExitHandler, err: any ) {
+export function exitHandler(
+	servers: IServer[],
+	opt: IExitHandler,
+	err?: any
+) {
 	if ( err )
 		print( err );
 
