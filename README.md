@@ -1,8 +1,6 @@
 # discord-twitch-bot
 
-Uses [discord.js](https://github.com/hydrabolt/discord.js/) and the
-[Twitch API](https://github.com/justintv/Twitch-API) to send a message whenever
-a streamer goes online.
+Uses [discord.js](https://github.com/hydrabolt/discord.js/) and the [Twitch API](https://github.com/justintv/Twitch-API) to send a message whenever a streamer goes online.  Based on [fuyuneko/discord-twitch-bot](https://github.com/fuyuneko/discord-twitch-bot)
 
 
 ## Configuration
@@ -18,13 +16,15 @@ Use `/configure` (see below) to configure the bot for your discord server.
 
 ## Usage
 
-`node discord-twitch-bot TOKEN CLIENTID INTERVAL`
+Create a `config.json` file
+```
+{
+	"discordToken": "YOUR_DISCORD_TOKEN",
+	"twitchClientID": "YOUR_TWITCH_ID"
+}
+```
 
-```
-TOKEN           Discord app bot user token
-CLIENTID        Twitch Client-ID
-INTERVAL        Interval in seconds in which to check for updates
-```
+`node discord-twitch-bot`
 
 
 ### Chat commands
@@ -44,9 +44,9 @@ INTERVAL        Interval in seconds in which to check for updates
 * `/list` - Lists all tracked Twitch channels and their online status.  Can be
   used by anyone.
 
-The `/` is the default prefix for commands. If a different prefix was specified
+The `!` is the default prefix for commands. If a different prefix was specified
 on the server by `/configure prefix` that one will have to be used instead of
-`/`.
+`!`.
 
 
 ## Token
@@ -57,7 +57,7 @@ To get a token you will need to create an app
 
 ## Client-ID
 
-To get a Twitch client-ID you will need to register a new application [here](https://www.twitch.tv/settings/connections).
+To get a Twitch client-ID you will need to register a new application [here](https://dev.twitch.tv/dashboard/apps).
 
 
 After that you can add the bot to your server by replacing `YOUR_CLIENT_ID` in
