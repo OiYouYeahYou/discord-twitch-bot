@@ -1,7 +1,7 @@
-import { Message } from "discord.js"
-import { destructingReply, somethingWentWrong } from "../util"
-import List from "./List"
-import { IServer } from "../types";
+import { Message } from 'discord.js'
+import { destructingReply, somethingWentWrong } from '../util'
+import List from './List'
+import { IServer } from '../types'
 
 
 export default class Request {

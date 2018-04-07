@@ -5,8 +5,8 @@ import Request from './Request'
 import { hasAuthorityForCommand, unauthorised } from '../authority'
 import Module from './Module'
 import AListItem, { IAbstractListItem, ListItemInfo } from './AListItem'
-import { Message } from 'discord.js';
-import { IServer } from '../types';
+import { Message } from 'discord.js'
+import { IServer } from '../types'
 
 export default class List {
 	/** Contains Command instances */

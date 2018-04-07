@@ -1,22 +1,22 @@
-import { IServer, WithNameProp } from "./types";
+import { IServer, WithNameProp } from './types'
 import { Guild, Message } from 'discord.js'
 
-import { format } from 'util';
-import { readFileSync } from 'fs';
-import { channelPath } from "./constants";
+import { format } from 'util'
+import { readFileSync } from 'fs'
+import { channelPath } from './constants'
 
-const leadingZero = ( n: number ) => n < 10 ? '0' + n : n;
+const leadingZero = ( n: number ) => n < 10 ? '0' + n : n
 const tidyString = ( str: string ) => str.toLowerCase().trim()
 
 // adds a timestamp before msg/err
 export function print( ...args ) {
-	var date = new Date();
-	var h = leadingZero( date.getHours() );
-	var m = leadingZero( date.getMinutes() );
-	var s = leadingZero( date.getSeconds() );
+	var date = new Date()
+	var h = leadingZero( date.getHours() )
+	var m = leadingZero( date.getMinutes() )
+	var s = leadingZero( date.getSeconds() )
 
 	// @ts-ignore
-	console.log( `[${ h }:${ m }:${ s }] ${ format( ...args ) }` );
+	console.log( `[${ h }:${ m }:${ s }] ${ format( ...args ) }` )
 }
 
 export function getByName<T extends WithNameProp>(
@@ -26,15 +26,15 @@ export function getByName<T extends WithNameProp>(
 	for ( const item of array ) {
 		const { name } = item
 		if ( name && tidyString( name ) === v )
-			return item;
+			return item
 	}
 }
 
 export function getPersistence(): IServer[] {
-	print( "Reading file " + channelPath );
+	print( 'Reading file ' + channelPath )
 	try {
-		const file = readFileSync( channelPath, { encoding: "utf-8" } );
-		const servers = JSON.parse( file );
+		const file = readFileSync( channelPath, { encoding: 'utf-8' } )
+		const servers = JSON.parse( file )
 		return servers
 	} catch ( error ) {
 		return []
@@ -43,18 +43,18 @@ export function getPersistence(): IServer[] {
 
 export function getServerConfig( servers: IServer[], guild: Guild ): IServer {
 	const { name, id } = guild
-	let server = getByName( servers, name );
+	let server = getByName( servers, name )
 	if ( server )
 		return server
 
 	server = {
 		name, id,
-		prefix: "!",
-		role: "botadmin",
+		prefix: '!',
+		role: 'botadmin',
 		discordChannels: [],
 		twitchChannels: []
 	}
-	servers.push( server );
+	servers.push( server )
 	return server
 }
 

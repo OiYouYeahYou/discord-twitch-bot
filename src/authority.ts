@@ -1,4 +1,4 @@
-import Request from './classes/Request';
+import Request from './classes/Request'
 import AListItem from './classes/AListItem'
 
 export function hasAuthorityForCommand( req: Request, wrapper: AListItem ) {
