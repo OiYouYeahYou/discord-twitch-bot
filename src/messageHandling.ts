@@ -6,7 +6,7 @@ import { servers } from '.'
 import List from './classes/List'
 import Request from './classes/Request'
 import { exitHandler } from './exitHandling'
-import { callApi } from './twitch'
+import { getChannel } from './twitch'
 import { tick } from './tick'
 
 export function messageReceived( message: Message ) {
@@ -55,7 +55,7 @@ function remove( req: Request, args: string ) {
 	return req.send( `Removed ${ streamer }.` )
 }
 
-function add( req: Request, content: string ) {
+async function add( req: Request, content: string ) {
 	const { server } = req
 	const [ name ] = splitByFirstSpace( content )
 	const channelObject = { name, timestamp: 0, online: false }
@@ -64,16 +64,15 @@ function add( req: Request, content: string ) {
 	if ( channel )
 		return req.send( name + ' is already in the list.' )
 
-	callApi( server, channelObject, ( _, __, res ) => {
-		if ( !res )
-			return req.send( name + ' doesn\'t seem to exist.' )
+	const res = await getChannel( name )
+	if ( !res )
+		return req.send( name + ' doesn\'t seem to exist.' )
 
-		server.twitchChannels.push( channelObject )
+	server.twitchChannels.push( channelObject )
 
-		tick()
+	await tick()
 
-		return req.send( `Added ${ name }.` )
-	}, false )
+	return req.send( `Added ${ name }.` )
 }
 
 function list( req: Request ) {

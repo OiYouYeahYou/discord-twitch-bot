@@ -1,64 +1,55 @@
 import { servers, bot } from '.'
-import { callApi } from './twitch'
+import { getStream, APIError, IStreamRespone } from './twitch'
 import { IServer, ITwitchChannel } from './types'
 import { timeout } from './constants'
 import { print } from './util'
-import { Embed } from './discord'
+import { Embed, sendEmbed } from './discord'
 
 
-export function tick() {
+export async function tick() {
 	for ( const server of servers )
 		for ( const twitchChannel of server.twitchChannels )
 			if ( twitchChannel )
-				callApi( server, twitchChannel, apiCallback, true )
+				apiCallback( server, twitchChannel )
 }
 
-async function apiCallback(
-	server: IServer,
-	twitchChannel: ITwitchChannel,
-	res
-) {
-	if ( !res )
+async function apiCallback( server: IServer, twitchChannel: ITwitchChannel ) {
+	const { discordChannels } = server
+	if ( !discordChannels.length )
 		return
 
-	const { stream } = res
+	const response = await getStream( twitchChannel.name )
+	if ( !response || response instanceof APIError )
+		return
 
-	if ( !test( res, twitchChannel, stream ) ) {
+	if ( !test( response, twitchChannel ) ) {
 		twitchChannel.online = false
 		return
 	}
 
 	try {
 		const guild = bot.guilds.find( 'id', server.id )
-		const { discordChannels } = server
 		const { channels } = guild
-		const embed = Embed( res )
+		const embed = Embed( response )
 
 		twitchChannel.online = true
 		twitchChannel.timestamp = Date.now()
 
-		if ( !discordChannels.length ) {
-			const channel = channels.find( 'type', 'text' )
+		for ( const discordChannel of discordChannels ) {
+			const channel = channels.find( 'id', discordChannel )
 			if ( channel )
 				// @ts-ignore
 				await sendEmbed( channel, embed )
 		}
-		else
-			for ( const discordChannel of discordChannels ) {
-				const channel = channels.find( 'id', discordChannel )
-				if ( channel )
-					// @ts-ignore
-					await sendEmbed( channel, embed )
-			}
 	} catch ( err ) {
 		print( err )
 	}
 }
 
-function test( res, twitchChannel: ITwitchChannel, stream: string ) {
+function test( res: IStreamRespone, twitchChannel: ITwitchChannel ) {
 	return (
 		res
-		&& stream
+		&& res.stream
 		&& !twitchChannel.online
 		&& ( twitchChannel.timestamp + timeout <= Date.now() )
 	)
