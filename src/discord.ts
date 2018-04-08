@@ -1,14 +1,14 @@
-import { SendableChannel, ITwtichResponse } from './types'
+import { SendableChannel } from './types'
 import { RichEmbed } from 'discord.js'
 import { print } from './util'
+import { IStream } from './twitch';
 
 export async function sendEmbed( channel: SendableChannel, embed: RichEmbed ) {
 	await channel.send( embed )
 	print( `Sent embed to channel '${ channel.name }'.` )
 }
 
-export function Embed( res: ITwtichResponse ) {
-	const { stream } = res
+export function Embed( stream: IStream ) {
 	const { channel, preview, viewers, created_at } = stream
 	const { display_name, url, game, status, logo, followers } = channel
 	const start = new Date( created_at )

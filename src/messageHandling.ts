@@ -8,9 +8,9 @@ import Request from './classes/Request'
 import { exitHandler } from './exitHandling'
 import { getChannel } from './twitch'
 import { tick } from './tick'
+import { ITwitchChannel } from './types';
 
 export function messageReceived( message: Message ) {
-	console.log( message )
 	const { guild } = message
 
 	if ( !guild )
@@ -58,7 +58,11 @@ function remove( req: Request, args: string ) {
 async function add( req: Request, content: string ) {
 	const { server } = req
 	const [ name ] = splitByFirstSpace( content )
-	const channelObject = { name, timestamp: 0, online: false }
+	const channelObject: ITwitchChannel = {
+		name,
+		online: false,
+		current: 0
+	}
 
 	const channel = getByName( server.twitchChannels, name )
 	if ( channel )

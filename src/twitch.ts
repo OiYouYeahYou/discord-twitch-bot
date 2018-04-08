@@ -75,18 +75,20 @@ type urlTemplate = string
 type WHAT = any
 
 export interface IStreamRespone {
-	readonly stream: {
-		readonly _id: number
-		readonly game: string
-		readonly viewers: number
-		readonly video_height: number
-		readonly average_fps: number
-		readonly delay: number
-		readonly created_at: isoDate
-		readonly is_playlist: boolean
-		readonly preview: IPreviewResponse
-		readonly channel: IChannelResponse
-	}
+	readonly stream: IStream
+}
+
+export interface IStream {
+	readonly _id: number
+	readonly game: string
+	readonly viewers: number
+	readonly video_height: number
+	readonly average_fps: number
+	readonly delay: number
+	readonly created_at: isoDate
+	readonly is_playlist: boolean
+	readonly preview: IPreviewResponse
+	readonly channel: IChannelResponse
 }
 
 interface IPreviewResponse {

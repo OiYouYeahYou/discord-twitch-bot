@@ -26,9 +26,8 @@ export function exitHandler(
 
 	if ( opt.save ) {
 		print( `Saving channels to ${ channelPath } before exiting` )
-		print( JSON.stringify( servers ) )
 		writeFileSync( channelPath, JSON.stringify( servers, null, 4 ) )
-		print( 'Done' )
+		print( 'Saved state' )
 	}
 
 	if ( opt.exit )
