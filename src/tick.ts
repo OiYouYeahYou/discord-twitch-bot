@@ -3,7 +3,6 @@ import { getStream, APIError } from './twitch'
 import { IServer, ITwitchChannel } from './types'
 import { print } from './util'
 import { Embed, sendEmbed } from './discord'
-import { exitHandler } from './exitHandling';
 
 
 export async function tick() {
@@ -15,8 +14,6 @@ export async function tick() {
 				} catch ( err ) {
 					print( 'Tick error', err )
 				}
-
-	exitHandler( servers, { save: true } )
 }
 
 async function apiCallback( server: IServer, twitchChannel: ITwitchChannel ) {

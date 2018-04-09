@@ -3,7 +3,8 @@ import { Message } from 'discord.js'
 export interface IConfig {
 	discordToken: string
 	twitchClientID: string
-	intervalString: number
+	tickInterval: number
+	saveInterval: number
 }
 
 export interface IServer {
@@ -13,11 +14,6 @@ export interface IServer {
 	role: string
 	discordChannels: string[],
 	twitchChannels: ITwitchChannel[]
-}
-
-export interface IExitHandler {
-	save?: boolean
-	exit?: boolean
 }
 
 export interface SendableChannel {

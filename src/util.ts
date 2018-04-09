@@ -1,8 +1,9 @@
-import { IServer, WithNameProp } from './types'
 import { Guild, Message } from 'discord.js'
-
 import { format } from 'util'
-import { readFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
+import { normalize } from 'path'
+
+import { IServer, WithNameProp } from './types'
 import { channelPath } from './constants'
 
 const leadingZero = ( n: number ) => n < 10 ? '0' + n : n
@@ -167,3 +168,9 @@ export function removePrefix( pfx: string, text: string ) {
 export const stringSort = ( a, b ) => a.name.toLowerCase().localeCompare(
 	b.name.toLowerCase()
 )
+
+export function saveState( servers: IServer[] ) {
+	const stateFile = normalize( channelPath )
+	writeFileSync( stateFile, JSON.stringify( servers, null, 4 ) )
+	print( `Saved channels to ${ stateFile } before exiting` )
+}

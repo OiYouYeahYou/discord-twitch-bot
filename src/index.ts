@@ -1,7 +1,7 @@
 import { Client } from 'discord.js'
 
-import { print, getPersistence } from './util'
-import { token, interval } from './constants'
+import { print, getPersistence, saveState } from './util'
+import { token, tickInterval, saveInterval } from './constants'
 import { IServer, } from './types'
 import { messageReceived } from './messageHandling'
 import { tick } from './tick'
@@ -20,8 +20,11 @@ async function start() {
 	print( 'Logged in with token ' + token )
 
 	tick()
-	setInterval( tick, interval )
+	bot.setInterval( tick, tickInterval )
+	bot.setInterval( saveState, saveInterval )
 
 	const invite = await bot.generateInvite( [] )
 	print( invite )
+
+	require( './exitHandling' )
 }

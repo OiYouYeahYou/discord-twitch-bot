@@ -1,11 +1,10 @@
 import { Message } from 'discord.js'
 import {
-	getServerConfig, getByName, isPrefixed, splitByFirstSpace, stringSort
+	getServerConfig, getByName, isPrefixed, splitByFirstSpace, stringSort, saveState
 } from './util'
 import { servers } from '.'
 import List from './classes/List'
 import Request from './classes/Request'
-import { exitHandler } from './exitHandling'
 import { getChannel } from './twitch'
 import { tick } from './tick'
 import { ITwitchChannel } from './types';
@@ -155,7 +154,7 @@ function configRole( req: Request, args: string ) {
 }
 
 async function configSave( req: Request, args: string ) {
-	exitHandler( servers, { save: true } )
+	saveState( servers )
 	await req.send( 'Done' )
 }
 
