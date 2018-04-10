@@ -8,11 +8,10 @@ export interface IConfig {
 }
 
 export interface IServer {
-	name: string
-	id: string
+	readonly id: string
 	prefix: string
 	role: string
-	discordChannels: string[],
+	discordChannels: string[]
 	twitchChannels: ITwitchChannel[]
 }
 
@@ -21,13 +20,9 @@ export interface SendableChannel {
 	name: string
 }
 
-export interface WithNameProp {
-	name: string
-}
-
 export interface ITwitchChannel {
 	/** Name of channel */
-	name: string
+	readonly name: string
 
 	/** Is channel live */
 	online: boolean

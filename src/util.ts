@@ -3,7 +3,7 @@ import { format } from 'util'
 import { readFileSync, writeFileSync } from 'fs'
 import { normalize } from 'path'
 
-import { IServer, WithNameProp } from './types'
+import { IServer } from './types'
 import { channelPath } from './constants'
 
 const leadingZero = ( n: number ) => n < 10 ? '0' + n : n
@@ -20,13 +20,24 @@ export function print( ...args ) {
 	console.log( `[${ h }:${ m }:${ s }] ${ format( ...args ) }` )
 }
 
-export function getByName<T extends WithNameProp>(
+export function getByName<T extends { name: string }>(
 	array: T[], value: string
 ): T {
 	const v = tidyString( value )
 	for ( const item of array ) {
 		const { name } = item
 		if ( name && tidyString( name ) === v )
+			return item
+	}
+}
+
+export function getByID<T extends { id: string }>(
+	array: T[], value: string
+): T {
+	const v = tidyString( value )
+	for ( const item of array ) {
+		const { id } = item
+		if ( id && tidyString( id ) === v )
 			return item
 	}
 }
@@ -43,13 +54,13 @@ export function getPersistence(): IServer[] {
 }
 
 export function getServerConfig( servers: IServer[], guild: Guild ): IServer {
-	const { name, id } = guild
-	let server = getByName( servers, name )
+	const { id } = guild
+	let server = getByID( servers, id )
 	if ( server )
 		return server
 
 	server = {
-		name, id,
+		id,
 		prefix: '!',
 		role: 'botadmin',
 		discordChannels: [],
@@ -172,5 +183,5 @@ export const stringSort = ( a, b ) => a.name.toLowerCase().localeCompare(
 export function saveState( servers: IServer[] ) {
 	const stateFile = normalize( channelPath )
 	writeFileSync( stateFile, JSON.stringify( servers, null, 4 ) )
-	print( `Saved channels to ${ stateFile } before exiting` )
+	print( `Saved state` )
 }

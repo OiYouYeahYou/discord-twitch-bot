@@ -1,8 +1,8 @@
 import { Client } from 'discord.js'
 
 import { print, getPersistence, saveState } from './util'
-import { token, tickInterval, saveInterval } from './constants'
-import { IServer, } from './types'
+import { token, tickInterval, saveInterval, channelPath } from './constants'
+import { IServer } from './types'
 import { messageReceived } from './messageHandling'
 import { tick } from './tick'
 
@@ -18,8 +18,9 @@ start().catch( err => {
 async function start() {
 	await bot.login( token )
 	print( 'Logged in with token ' + token )
+	print( `State store ${ channelPath }` )
 
-	tick()
+	await tick()
 	bot.setInterval( tick, tickInterval )
 	bot.setInterval( saveState, saveInterval )
 

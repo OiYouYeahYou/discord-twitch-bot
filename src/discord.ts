@@ -1,12 +1,5 @@
-import { SendableChannel } from './types'
 import { RichEmbed } from 'discord.js'
-import { print } from './util'
-import { IStream } from './twitch';
-
-export async function sendEmbed( channel: SendableChannel, embed: RichEmbed ) {
-	await channel.send( embed )
-	print( `Sent embed to channel '${ channel.name }'.` )
-}
+import { IStream } from './twitch'
 
 export function Embed( stream: IStream ) {
 	const { channel, preview, viewers, created_at } = stream

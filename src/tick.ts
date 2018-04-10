@@ -1,60 +1,90 @@
+import { Guild, TextChannel } from 'discord.js'
+
 import { servers, bot } from '.'
 import { getStream, APIError } from './twitch'
-import { IServer, ITwitchChannel } from './types'
+import { ITwitchChannel } from './types'
 import { print } from './util'
-import { Embed, sendEmbed } from './discord'
+import { Embed } from './discord'
 
 
 export async function tick() {
-	for ( const server of servers )
-		for ( const twitchChannel of server.twitchChannels )
-			if ( twitchChannel )
-				try {
-					await apiCallback( server, twitchChannel )
-				} catch ( err ) {
-					print( 'Tick error', err )
-				}
+	for ( const server of servers ) {
+		const { id, twitchChannels, discordChannels } = server
+
+		const guild = bot.guilds.find( 'id', id )
+		if ( !guild )
+			continue
+
+		for ( const twitchChannel of twitchChannels ) {
+			if ( !discordChannels.length )
+				continue
+
+			try {
+				await apiCallback( discordChannels, twitchChannel, guild )
+			} catch ( err ) {
+				print( 'Tick error', err )
+			}
+		}
+	}
 }
 
-async function apiCallback( server: IServer, twitchChannel: ITwitchChannel ) {
-	const { discordChannels } = server
-	if ( !discordChannels.length )
-		return
-
+async function apiCallback(
+	channels: string[],
+	twitchChannel: ITwitchChannel,
+	guild: Guild
+) {
 	const response = await getStream( twitchChannel.name )
 	if ( response instanceof APIError ) {
 		if ( response.status === 404 )
-			print(
-				`Unable to find ${ twitchChannel.name } for ${ server.name }`
-			)
+			print( `Unable to find ${ twitchChannel.name } in ${ guild.name }` )
 
 		return
 	}
 
 	const { stream } = response
 	if ( !stream ) {
+		if ( twitchChannel.online )
+			sendToChannels(
+				guild, twitchChannel, channels,
+				`${ twitchChannel.name }'s stream is over`,
+				'end of stream'
+			)
+
 		twitchChannel.online = false
 		twitchChannel.current = 0
 		return
 	}
 
-	if ( twitchChannel.online && twitchChannel.current == stream._id )
+	if ( twitchChannel.current == stream._id )
 		return
 
 	twitchChannel.online = true
 	twitchChannel.current = stream._id
 
-	const guild = bot.guilds.find( 'id', server.id )
-	if ( !guild )
-		return // Cannot find guild
-
-	const { channels } = guild
 	const embed = Embed( stream )
+	sendToChannels( guild, twitchChannel, channels, embed, 'stream live' )
+}
 
-	for ( const discordChannel of discordChannels ) {
-		const channel = channels.find( 'id', discordChannel )
-		if ( channel )
-			// @ts-ignore
-			await sendEmbed( channel, embed )
+async function sendToChannels(
+	guild: Guild,
+	streamer: ITwitchChannel,
+	ids: string[],
+	message,
+	type: string
+) {
+	for ( const discordChannel of ids ) {
+		const channel = guild.channels.find( 'id', discordChannel )
+		if ( !channel )
+			continue
+
+		if ( !( channel instanceof TextChannel ) )
+			continue
+
+		try {
+			await channel.send( message )
+			print( `Sent ${ type } message for ${ streamer.name } to channel ${ channel.name } on ${ guild.name }` )
+		} catch ( err ) {
+			print( `Failed to ${ type } message for ${ streamer.name } to ${ channel.name } on ${ guild.name }`, err )
+		}
 	}
 }
