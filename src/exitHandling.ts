@@ -1,5 +1,5 @@
-import { servers } from '.'
-import { print, saveState } from './util'
+import { store } from '.'
+import { print } from './util'
 
 const saveOpt = { save: true }
 const exitOpt = { exit: true }
@@ -20,6 +20,6 @@ function setExitHandler( event, opt: IExitHandler ) {
 
 function exitHandler( opt: IExitHandler, err?: any ) {
 	if ( err ) print( err )
-	if ( opt.save ) saveState( servers )
+	if ( opt.save ) store.save()
 	if ( opt.exit ) process.exit()
 }

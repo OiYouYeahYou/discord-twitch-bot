@@ -1,13 +1,7 @@
-import { Guild, Message } from 'discord.js'
+import { Message } from 'discord.js'
 import { format } from 'util'
-import { readFileSync, writeFileSync } from 'fs'
-import { normalize } from 'path'
-
-import { IServer } from './types'
-import { channelPath } from './constants'
 
 const leadingZero = ( n: number ) => n < 10 ? '0' + n : n
-const tidyString = ( str: string ) => str.toLowerCase().trim()
 
 // adds a timestamp before msg/err
 export function print( ...args ) {
@@ -18,56 +12,6 @@ export function print( ...args ) {
 
 	// @ts-ignore
 	console.log( `[${ h }:${ m }:${ s }] ${ format( ...args ) }` )
-}
-
-export function getByName<T extends { name: string }>(
-	array: T[], value: string
-): T {
-	const v = tidyString( value )
-	for ( const item of array ) {
-		const { name } = item
-		if ( name && tidyString( name ) === v )
-			return item
-	}
-}
-
-export function getByID<T extends { id: string }>(
-	array: T[], value: string
-): T {
-	const v = tidyString( value )
-	for ( const item of array ) {
-		const { id } = item
-		if ( id && tidyString( id ) === v )
-			return item
-	}
-}
-
-export function getPersistence(): IServer[] {
-	print( 'Reading file ' + channelPath )
-	try {
-		const file = readFileSync( channelPath, { encoding: 'utf-8' } )
-		const servers = JSON.parse( file )
-		return servers
-	} catch ( error ) {
-		return []
-	}
-}
-
-export function getServerConfig( servers: IServer[], guild: Guild ): IServer {
-	const { id } = guild
-	let server = getByID( servers, id )
-	if ( server )
-		return server
-
-	server = {
-		id,
-		prefix: '!',
-		role: 'botadmin',
-		discordChannels: [],
-		twitchChannels: []
-	}
-	servers.push( server )
-	return server
 }
 
 /** String indexOf that returns undefined instead of -1 */
@@ -179,9 +123,3 @@ export function removePrefix( pfx: string, text: string ) {
 export const stringSort = ( a, b ) => a.name.toLowerCase().localeCompare(
 	b.name.toLowerCase()
 )
-
-export function saveState( servers: IServer[] ) {
-	const stateFile = normalize( channelPath )
-	writeFileSync( stateFile, JSON.stringify( servers, null, 4 ) )
-	print( `Saved state` )
-}

@@ -6,7 +6,7 @@ import { hasAuthorityForCommand, unauthorised } from '../authority'
 import Module from './Module'
 import AListItem, { IAbstractListItem, ListItemInfo } from './AListItem'
 import { Message } from 'discord.js'
-import { IServer } from '../types'
+import Store, { IGuildGonfig } from './Store';
 
 export default class List {
 	/** Contains Command instances */
@@ -116,11 +116,12 @@ export default class List {
 
 	async run(
 		message: Message,
-		server: IServer,
+		store: Store,
+		config: IGuildGonfig,
 		text: string,
 		prefix: string
 	) {
-		const req = new Request( this, server, message, prefix, text )
+		const req = new Request( this, store, config, message, prefix, text )
 		const commandString = removePrefix( prefix, text )
 
 		await this.commandRunner( req, commandString )

@@ -1,15 +1,28 @@
-import { Client } from 'discord.js'
+import { Client, Message } from 'discord.js'
 
-import { print, getPersistence, saveState } from './util'
+import { print, isPrefixed } from './util'
 import { token, tickInterval, saveInterval, channelPath } from './constants'
-import { IServer } from './types'
-import { messageReceived } from './messageHandling'
+import { main } from './messageHandling'
 import { tick } from './tick'
+import Store from './classes/Store';
 
-export const servers: IServer[] = getPersistence()
+export const store = new Store( channelPath )
 
 export const bot = new Client()
-bot.on( 'message', messageReceived )
+bot.on( 'message', function messageReceived( message: Message ) {
+	const { guild } = message
+
+	if ( !guild )
+		return
+
+	const server = store.getConfig( guild )
+	const { prefix } = server
+	const content = message.content.trim()
+
+	if ( isPrefixed( prefix, content ) )
+		return main.run( message, store, server, content, prefix )
+} )
+
 start().catch( err => {
 	print( 'An error occured while loging in:', err )
 	process.exit( 1 )
@@ -18,11 +31,12 @@ start().catch( err => {
 async function start() {
 	await bot.login( token )
 	print( 'Logged in with token ' + token )
-	print( `State store ${ channelPath }` )
+
+	store.load()
 
 	await tick()
 	bot.setInterval( tick, tickInterval )
-	bot.setInterval( saveState, saveInterval )
+	bot.setInterval( () => store.save(), saveInterval )
 
 	const invite = await bot.generateInvite( [] )
 	print( invite )

@@ -1,4 +1,9 @@
-import { IConfig } from './types'
+export interface IConfig {
+	discordToken: string
+	twitchClientID: string
+	tickInterval: number
+	saveInterval: number
+}
 
 const config: IConfig = require( '../config.json' )
 const { twitchClientID, discordToken } = config

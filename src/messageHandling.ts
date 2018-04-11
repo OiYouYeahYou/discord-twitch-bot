@@ -1,29 +1,11 @@
-import { Message } from 'discord.js'
-import {
-	getServerConfig, getByName, isPrefixed, splitByFirstSpace, stringSort, saveState
-} from './util'
-import { servers } from '.'
+import { splitByFirstSpace, stringSort } from './util'
 import List from './classes/List'
 import Request from './classes/Request'
 import { getChannel } from './twitch'
 import { tick } from './tick'
-import { ITwitchChannel } from './types';
+import { APIError } from './twitch';
 
-export function messageReceived( message: Message ) {
-	const { guild } = message
-
-	if ( !guild )
-		return
-
-	const server = getServerConfig( servers, guild )
-	const { prefix } = server
-	const content = message.content.trim()
-
-	if ( isPrefixed( prefix, content ) )
-		return main.run( message, server, content, prefix )
-}
-
-const main = new List()
+export const main = new List()
 main.addCommand( 'remove', { func: remove, help: '' } )
 main.addCommand( 'add', { func: add, help: '' } )
 main.addCommand( 'list', { func: list, help: '' } )
@@ -40,38 +22,29 @@ configChannel.addCommand( 'add', { func: addChannel, help: '' } )
 configChannel.addCommand( 'remove', { func: rmChannel, help: '' } )
 
 function remove( req: Request, args: string ) {
-	const { server } = req
-	const [ streamer ] = splitByFirstSpace( args )
-	const channel = getByName( server.twitchChannels, streamer )
+	const { guild, store } = req
+	const [ name ] = splitByFirstSpace( args )
 
-	if ( !channel )
-		return req.send( `${ streamer } isn't in the list.` )
+	if ( !store.streamerRecordExists( guild, name ) )
+		return req.send( `${ name } isn't in the list.` )
 
-	server.twitchChannels = server.twitchChannels.filter(
-		channel => channel.name != streamer
-	)
+	store.addStreamer( guild, name )
 
-	return req.send( `Removed ${ streamer }.` )
+	return req.send( `Removed ${ name }.` )
 }
 
 async function add( req: Request, content: string ) {
-	const { server } = req
+	const { store, guild } = req
 	const [ name ] = splitByFirstSpace( content )
-	const channelObject: ITwitchChannel = {
-		name,
-		online: false,
-		current: 0
-	}
 
-	const channel = getByName( server.twitchChannels, name )
-	if ( channel )
+	if ( store.streamerRecordExists( guild, name ) )
 		return req.send( name + ' is already in the list.' )
 
 	const res = await getChannel( name )
-	if ( !res )
+	if ( !( res instanceof APIError ) )
 		return req.send( name + ' doesn\'t seem to exist.' )
 
-	server.twitchChannels.push( channelObject )
+	store.addStreamer( guild, name )
 
 	await tick()
 
@@ -79,16 +52,17 @@ async function add( req: Request, content: string ) {
 }
 
 function list( req: Request ) {
-	const { twitchChannels } = req.server
+	const records = Object.values( req.guildConfig.channels )
 
-	if ( !twitchChannels.length )
+	if ( !records.length )
 		return req.send( 'The list is empty.' )
 
-	const channels = Array.from( twitchChannels ).sort( stringSort )
+	records.sort( stringSort )
+
 	const offline = []
 	const live = []
 
-	for ( const { online, name } of channels )
+	for ( const { online, name } of records )
 		( online ? live : offline ).push( name )
 
 	const liveString = live.join( ', ' )
@@ -108,7 +82,7 @@ async function callTick( req: Request ) {
 }
 
 function configList( req: Request ) {
-	const { role, discordChannels, prefix } = req.server
+	const { role, channels, prefix } = req.guildConfig
 	const msg = []
 
 	msg.push( '```\n' )
@@ -116,25 +90,25 @@ function configList( req: Request ) {
 	msg.push( 'role      ' + role )
 
 	const space = '          '
-	msg.push( discordChannels.map( c => space + c ).join( ',\n' ) )
+	msg.push( Object.values( channels ).map( c => space + c ).join( ',\n' ) )
 	msg.push( '```' )
 
 	return req.send( msg.join( '\n' ) )
 }
 
 function configPfx( req: Request, args: string ) {
-	const { server } = req
-	const { prefix } = server
+	const { guildConfig } = req
+	const { prefix } = guildConfig
 	let [ newPrefix ] = splitByFirstSpace( args )
 
 	if ( newPrefix.replace( /\s/g, '' ).length === 0 )
-		return missingArguments( req )
+		return this.missingArguments()
 
 	else if ( newPrefix == prefix )
 		return req.send( 'Prefix already is ' + prefix )
 
 	else {
-		server.prefix = newPrefix
+		guildConfig.prefix = newPrefix
 		return req.send( 'Changed prefix to ' + prefix )
 	}
 }
@@ -143,72 +117,68 @@ function configRole( req: Request, args: string ) {
 	const newRole = args
 
 	if ( newRole.replace( /\s/g, '' ).length === 0 )
-		return missingArguments( req )
+		return this.missingArguments()
 
 	else {
-		const { server } = req
+		const { guildConfig } = req
 
-		server.role = newRole
-		return req.send( 'Changed role to ' + server.role )
+		guildConfig.role = newRole
+		return req.send( 'Changed role to ' + guildConfig.role )
 	}
 }
 
 async function configSave( req: Request, args: string ) {
-	saveState( servers )
+	req.store.save()
 	await req.send( 'Done' )
 }
 
 function addChannel( req: Request, args: string ) {
-	const { channels } = req.message.mentions
-	const { size } = channels
+	const { store, guild, message } = req
+	const { channels } = message.mentions
 
-	if ( size ) {
+	if ( channels.size ) {
 		for ( const [ , channel ] of channels )
-			req.server.discordChannels.push( channel.id )
+			store.addOutput( guild, channel )
 
 		return req.send( 'Done' )
 	}
 
-	const channel = args.replace( /\s/g, '' ).replace( /\s/g, '-' )
+	const channelName = args.replace( /\s/g, '-' )
 
-	if ( req.guild.channels.exists( 'name', channel ) ) {
-		req.server.discordChannels.push( channel )
-		return req.send( `Added ${ channel } to list of channels to post in.` )
+	if ( channels.exists( 'name', channelName ) ) {
+		const channel = channels.find( 'name', channelName )
+
+		store.addOutput( guild, channel )
+
+		return req.send( `Added ${ channelName } to list of channels to post in.` )
 	}
 
-	return req.send( channel + ' does not exist on this server.' )
+	return req.send( channelName + ' does not exist on this server.' )
 }
 
 function rmChannel( req: Request, args: string ) {
-	const { discordChannels } = req.server
-	const { channels } = req.message.mentions
-	const { size } = channels
+	const { guild, message, store } = req
+	const { channels } = message.mentions
 
-	if ( size ) {
+	if ( channels.size ) {
 		for ( const [ , channel ] of channels )
-			req.server.discordChannels = discordChannels.filter(
-				ch => ch != channel.id
-			)
+			store.removeOutput( guild, channel.id )
 
 		return req.send( 'Done' )
 	}
 
 	if ( !args )
-		return missingArguments( req )
+		return this.missingArguments()
 
-	const channelName = args.replace( /\s/g, '' ).replace( /\s/g, '-' )
-	const channel = req.guild.channels.find( 'name', channelName )
+	const name = args.replace( /\s/g, '-' )
+	const channel = guild.channels.find( 'name', name )
 
 	if ( !channel )
-		return req.send( 'No Channel found by the name' + channelName )
+		return req.send( 'No Channel found by the name' + name )
 
-	req.server.discordChannels = discordChannels.filter( ch => ch != channel.id )
+	store.removeOutput( guild, channel.id )
 
 	return req.send(
-		`Removed ${ channelName } from list of channels to post in.`
+		`Removed ${ name } from list of channels to post in.`
 	)
-}
-
-function missingArguments( req: Request ) {
-	return req.send( 'Please specify an argument for channel' )
 }

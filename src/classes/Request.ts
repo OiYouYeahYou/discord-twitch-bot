@@ -1,26 +1,29 @@
 import { Message } from 'discord.js'
 import { destructingReply, somethingWentWrong } from '../util'
 import List from './List'
-import { IServer } from '../types'
+import Store, { IGuildGonfig } from './Store';
 
 
 export default class Request {
 	constructor(
 		list: List,
-		server: IServer,
+		store: Store,
+		config: IGuildGonfig,
 		message: Message,
 		prefix: string,
 		text: string
 	) {
 		this.list = list
-		this.server = server
+		this.store = store
+		this.guildConfig = config
 		this.message = message
 		this.prefix = prefix
 		this.text = text
 	}
 
 	readonly list: List
-	readonly server: IServer
+	readonly store: Store
+	readonly guildConfig: IGuildGonfig
 	readonly message: Message
 	readonly prefix: string
 	readonly text: string
@@ -61,5 +64,9 @@ export default class Request {
 
 	async somethingWentWrong( err ) {
 		return somethingWentWrong( this.message, err )
+	}
+
+	async missingArguments() {
+		return this.send( 'Please specify an argument for channel' )
 	}
 }

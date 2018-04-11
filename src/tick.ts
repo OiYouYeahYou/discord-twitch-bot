@@ -1,26 +1,26 @@
 import { Guild, TextChannel } from 'discord.js'
 
-import { servers, bot } from '.'
+import { bot, store } from '.'
 import { getStream, APIError } from './twitch'
-import { ITwitchChannel } from './types'
 import { print } from './util'
 import { Embed } from './discord'
+import { IStreamerRecord } from './classes/Store';
 
 
 export async function tick() {
-	for ( const server of servers ) {
-		const { id, twitchChannels, discordChannels } = server
+	for ( const server of store.configArray() ) {
+		const { id, channels, outputs } = server
 
 		const guild = bot.guilds.find( 'id', id )
 		if ( !guild )
 			continue
 
-		for ( const twitchChannel of twitchChannels ) {
-			if ( !discordChannels.length )
+		for ( const twitchChannel of Object.values( channels ) ) {
+			if ( !outputs.length )
 				continue
 
 			try {
-				await apiCallback( discordChannels, twitchChannel, guild )
+				await apiCallback( outputs, twitchChannel, guild )
 			} catch ( err ) {
 				print( 'Tick error', err )
 			}
@@ -30,7 +30,7 @@ export async function tick() {
 
 async function apiCallback(
 	channels: string[],
-	twitchChannel: ITwitchChannel,
+	twitchChannel: IStreamerRecord,
 	guild: Guild
 ) {
 	const response = await getStream( twitchChannel.name )
@@ -67,7 +67,7 @@ async function apiCallback(
 
 async function sendToChannels(
 	guild: Guild,
-	streamer: ITwitchChannel,
+	streamer: IStreamerRecord,
 	ids: string[],
 	message,
 	type: string
