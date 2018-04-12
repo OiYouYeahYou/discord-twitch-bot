@@ -2,6 +2,7 @@ import { normalize } from 'path'
 import { writeFileSync, readFileSync } from 'fs'
 import { print } from '../util'
 import { Guild, GuildChannel } from 'discord.js'
+import { GuildGonfig, IRawGuildGonfig } from '../classes/GuildConfig'
 
 
 export default class Store {
@@ -9,8 +10,7 @@ export default class Store {
 		this.path = normalize( path )
 	}
 
-	private configs: IConfigStore
-	// private channels: y
+	private configs: { [ id: string ]: GuildGonfig }
 	private readonly path: string
 
 	configArray() {
@@ -18,9 +18,8 @@ export default class Store {
 	}
 
 	save() {
-		const { configs } = this
-		const state: ISaveState = { configs }
-		const json = JSON.stringify( state, null, 4 )
+		console.log( this.toJSON() );
+		const json = JSON.stringify( this, null, 4 )
 
 		writeFileSync( this.path, json )
 		print( `Saved state` )
@@ -36,11 +35,15 @@ export default class Store {
 		} catch ( error ) {
 			print
 		}
+		this.save()
 	}
 
-	private populate( saveSate: ISaveState ) {
-		this.configs = saveSate.configs
-		// this.channels = saveSate.channels
+	private populate( saveSate: IRawSaveState ) {
+		this.configs = {}
+
+		for ( const x in saveSate.configs )
+			this.configs[ x ] = new GuildGonfig( saveSate.configs[ x ] )
+
 	}
 
 	getConfig( guild: Guild ) {
@@ -49,77 +52,50 @@ export default class Store {
 		if ( server )
 			return server
 
-		return this.configs[ id ] = {
-			id,
-			prefix: '!',
-			role: 'botadmin',
-			outputs: [],
-			channels: {}
-		}
+		return this.addConfig( id )
+	}
+
+	private addConfig( id ) {
+		return this.configs[ id ] = GuildGonfig.create( id )
 	}
 
 	streamerRecordExists( guild: Guild, name: string ) {
-		const { channels } = this.getConfig( guild )
-		return channels.hasOwnProperty( name ) && channels[ name ]
+		return this.getConfig( guild ).streamerRecordExists( name )
 	}
 
 	addStreamer( guild: Guild, name: string ) {
-		const { channels } = this.getConfig( guild )
-
-		channels[ name ] = {
-			name,
-			online: false,
-			current: 0
-		}
+		return this.getConfig( guild ).addStreamer( name )
 	}
 
 	removeStreamer( guild: Guild, name: string ) {
-		const { channels } = this.getConfig( guild )
-
-		if ( !channels.hasOwnProperty( name ) && channels[ name ] )
-			return
-
-		channels[ name ] = undefined
+		return this.getConfig( guild ).removeStreamer( name )
 	}
 
 	addOutput( guild: Guild, output: GuildChannel ) {
-		const { outputs } = this.getConfig( guild )
-		if ( outputs.some( out => out === output.id ) )
-			return false
-
-		outputs.push( output.id )
+		return this.getConfig( guild ).addOutput( output )
 	}
 
 	removeOutput( guild: Guild, idToRemove: string ) {
-		const config = this.getConfig( guild )
-		const { outputs } = config
-		const oldLength = outputs.length
+		return this.getConfig( guild ).removeOutput( idToRemove )
+	}
 
-		config.outputs = outputs.filter( existing => existing !== idToRemove )
+	toJSON(): IRawSaveState {
+		const configs = {}
 
-		return config.outputs.length === oldLength
+		for ( const id in this.configs )
+			if ( this.configs.hasOwnProperty( id ) )
+				configs[ id ] = this.configs[ id ].toRaw()
+
+		return { configs }
 	}
 }
 
-interface ISaveState {
-	configs: IConfigStore
-	// channels: IStreamers
+interface IRawSaveState {
+	configs: IRawConfigStore
 }
 
-interface IConfigStore {
-	[ id: string ]: IGuildGonfig
-}
-
-export interface IGuildGonfig {
-	readonly id: string
-	prefix: string
-	role: string
-	outputs: string[]
-	channels: IStreamerRecordStore
-}
-
-interface IStreamerRecordStore {
-	[ name: string ]: IStreamerRecord
+interface IRawConfigStore {
+	[ id: string ]: IRawGuildGonfig
 }
 
 export interface IStreamerRecord {

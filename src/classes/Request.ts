@@ -1,14 +1,15 @@
 import { Message } from 'discord.js'
 import { destructingReply, somethingWentWrong } from '../util'
 import List from './List'
-import Store, { IGuildGonfig } from './Store';
+import Store from './Store'
+import { GuildGonfig } from './GuildConfig'
 
 
 export default class Request {
 	constructor(
 		list: List,
 		store: Store,
-		config: IGuildGonfig,
+		config: GuildGonfig,
 		message: Message,
 		prefix: string,
 		text: string
@@ -23,7 +24,7 @@ export default class Request {
 
 	readonly list: List
 	readonly store: Store
-	readonly guildConfig: IGuildGonfig
+	readonly guildConfig: GuildGonfig
 	readonly message: Message
 	readonly prefix: string
 	readonly text: string

@@ -1,12 +1,14 @@
 import Command, { CommandInfo } from './Command'
-import { maxStringLength, padLeft, padRight, processCommandString, removePrefix }
-	from '../util'
+import {
+	maxStringLength, padLeft, padRight, processCommandString, removePrefix
+} from '../util'
 import Request from './Request'
 import { hasAuthorityForCommand, unauthorised } from '../authority'
 import Module from './Module'
 import AListItem, { IAbstractListItem, ListItemInfo } from './AListItem'
 import { Message } from 'discord.js'
-import Store, { IGuildGonfig } from './Store';
+import Store from './Store'
+import { GuildGonfig } from './GuildConfig'
 
 export default class List {
 	/** Contains Command instances */
@@ -117,7 +119,7 @@ export default class List {
 	async run(
 		message: Message,
 		store: Store,
-		config: IGuildGonfig,
+		config: GuildGonfig,
 		text: string,
 		prefix: string
 	) {

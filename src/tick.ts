@@ -4,18 +4,18 @@ import { bot, store } from '.'
 import { getStream, APIError } from './twitch'
 import { print } from './util'
 import { Embed } from './discord'
-import { IStreamerRecord } from './classes/Store';
+import { StreamerRecord } from './classes/StreamerRecord'
 
 
 export async function tick() {
 	for ( const server of store.configArray() ) {
-		const { id, channels, outputs } = server
+		const { id, outputs } = server
 
 		const guild = bot.guilds.find( 'id', id )
 		if ( !guild )
 			continue
 
-		for ( const twitchChannel of Object.values( channels ) ) {
+		for ( const twitchChannel of server.recordsArray() ) {
 			if ( !outputs.length )
 				continue
 
@@ -30,7 +30,7 @@ export async function tick() {
 
 async function apiCallback(
 	channels: string[],
-	twitchChannel: IStreamerRecord,
+	twitchChannel: StreamerRecord,
 	guild: Guild
 ) {
 	const response = await getStream( twitchChannel.name )
@@ -43,23 +43,21 @@ async function apiCallback(
 
 	const { stream } = response
 	if ( !stream ) {
-		if ( twitchChannel.online )
+		if ( twitchChannel.isOnline )
 			sendToChannels(
 				guild, twitchChannel, channels,
 				`${ twitchChannel.name }'s stream is over`,
 				'end of stream'
 			)
 
-		twitchChannel.online = false
-		twitchChannel.current = 0
+		twitchChannel.setOffline()
 		return
 	}
 
-	if ( twitchChannel.current == stream._id )
+	if ( twitchChannel.isSameStream( stream ) )
 		return
 
-	twitchChannel.online = true
-	twitchChannel.current = stream._id
+	twitchChannel.setOnline( stream )
 
 	const embed = Embed( stream )
 	sendToChannels( guild, twitchChannel, channels, embed, 'stream live' )
@@ -67,7 +65,7 @@ async function apiCallback(
 
 async function sendToChannels(
 	guild: Guild,
-	streamer: IStreamerRecord,
+	streamer: StreamerRecord,
 	ids: string[],
 	message,
 	type: string
