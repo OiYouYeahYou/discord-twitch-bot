@@ -1,8 +1,8 @@
 export interface IConfig {
 	discordToken: string
 	twitchClientID: string
-	tickInterval: number
-	saveInterval: number
+	tick: number
+	save: number
 }
 
 const config: IConfig = require( '../config.json' )
@@ -15,8 +15,8 @@ if ( !discordToken )
 	throw new Error( 'No Discord Token' )
 
 export const token = discordToken
-export const tickInterval = Number( config.tickInterval || ( 3 * 60 ) ) * 1000
-export const saveInterval = Number( config.saveInterval || ( 5 * 60 ) ) * 1000
+export const tickInterval = Number( config.tick || ( 3 * 60 ) ) * 1000
+export const saveInterval = Number( config.save || ( 5 * 60 ) ) * 1000
 
 export const host = 'api.twitch.tv'
 export const headers = {
