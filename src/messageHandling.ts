@@ -41,7 +41,7 @@ async function add( req: Request, content: string ) {
 		return req.send( name + ' is already in the list.' )
 
 	const res = await getChannel( name )
-	if ( !( res instanceof APIError ) )
+	if ( res instanceof APIError )
 		return req.send( name + ' doesn\'t seem to exist.' )
 
 	store.addStreamer( guild, name )
