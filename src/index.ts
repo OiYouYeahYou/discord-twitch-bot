@@ -4,7 +4,7 @@ import { print, isPrefixed } from './util'
 import { token, tickInterval, saveInterval, channelPath } from './constants'
 import { main } from './messageHandling'
 import { tick } from './tick'
-import Store from './classes/Store';
+import Store from './classes/Store'
 
 export const store = new Store( channelPath )
 

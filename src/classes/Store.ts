@@ -18,7 +18,7 @@ export default class Store {
 	}
 
 	save() {
-		console.log( this.toJSON() );
+		console.log( this.toJSON() )
 		const json = JSON.stringify( this, null, 4 )
 
 		writeFileSync( this.path, json )

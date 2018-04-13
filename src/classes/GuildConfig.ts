@@ -1,5 +1,5 @@
-import { GuildChannel } from "discord.js";
-import { StreamerRecord, IRawStreamerRecord } from "./StreamerRecord";
+import { GuildChannel } from 'discord.js'
+import { StreamerRecord, IRawStreamerRecord } from './StreamerRecord'
 
 const defalutConfig = {
 	prefix: '!',

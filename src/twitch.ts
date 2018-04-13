@@ -68,7 +68,7 @@ export interface IChannelResponse {
 	readonly views: number
 }
 
-type language = 'en';
+type language = 'en'
 type isoDate = string
 type url = string
 type urlTemplate = string

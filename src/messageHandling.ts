@@ -3,7 +3,7 @@ import List from './classes/List'
 import Request from './classes/Request'
 import { getChannel } from './twitch'
 import { tick } from './tick'
-import { APIError } from './twitch';
+import { APIError } from './twitch'
 
 export const main = new List()
 main.addCommand( 'remove', { func: remove, help: '' } )
