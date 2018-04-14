@@ -1,10 +1,11 @@
-import { Guild, TextChannel } from 'discord.js'
+import { Guild } from 'discord.js'
 
 import { bot, store } from '.'
 import { getStream, APIError } from './twitch'
 import { print } from './util'
 import { Embed } from './discord'
 import { StreamerRecord } from './classes/StreamerRecord'
+import { ChannelHandler } from './classes/ChannelHandler';
 
 
 export async function tick() {
@@ -29,7 +30,7 @@ export async function tick() {
 }
 
 async function apiCallback(
-	channels: string[],
+	channels: ChannelHandler[],
 	twitchChannel: StreamerRecord,
 	guild: Guild
 ) {
@@ -66,18 +67,11 @@ async function apiCallback(
 async function sendToChannels(
 	guild: Guild,
 	streamer: StreamerRecord,
-	ids: string[],
+	channels: ChannelHandler[],
 	message,
 	type: string
 ) {
-	for ( const discordChannel of ids ) {
-		const channel = guild.channels.find( 'id', discordChannel )
-		if ( !channel )
-			continue
-
-		if ( !( channel instanceof TextChannel ) )
-			continue
-
+	for ( const channel of channels ) {
 		try {
 			await channel.send( message )
 			print( `Sent ${ type } message for ${ streamer.name } to channel ${ channel.name } on ${ guild.name }` )

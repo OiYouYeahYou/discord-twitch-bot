@@ -1,5 +1,6 @@
 import { GuildChannel } from 'discord.js'
 import { StreamerRecord, IRawStreamerRecord } from './StreamerRecord'
+import { ChannelHandler } from './ChannelHandler';
 
 const defalutConfig = {
 	prefix: '!',
@@ -13,7 +14,9 @@ export class GuildGonfig {
 		this.id = input.id
 		this.prefix = input.prefix
 		this.role = input.role
-		this.outputs = input.outputs
+		this.outputs = input.outputs.map(
+			channel => new ChannelHandler( channel )
+		)
 
 		this.channels = {}
 		for ( const id in input.channels ) {
@@ -24,7 +27,7 @@ export class GuildGonfig {
 	readonly id: string
 	prefix: string
 	role: string
-	outputs: string[]
+	outputs: ChannelHandler[]
 	channels: { [ name: string ]: StreamerRecord }
 
 	streamerRecordExists( name: string ) {
@@ -46,17 +49,19 @@ export class GuildGonfig {
 	}
 
 	addOutput( output: GuildChannel ) {
-		if ( this.outputs.some( out => out === output.id ) )
+		if ( this.outputs.some( out => out.channelID === output.id ) )
 			return false
 
-		this.outputs.push( output.id )
+		this.outputs.push( new ChannelHandler( output.id ) )
 	}
 
 	removeOutput( idToRemove: string ) {
 		const { outputs } = this
 		const oldLength = outputs.length
 
-		this.outputs = outputs.filter( existing => existing !== idToRemove )
+		this.outputs = outputs.filter(
+			existing => existing.channelID !== idToRemove
+		)
 
 		return this.outputs.length === oldLength
 	}
@@ -71,8 +76,12 @@ export class GuildGonfig {
 	}
 
 	toRaw(): IRawGuildGonfig {
-		const { id, prefix, role, outputs } = this
+		const { id, prefix, role } = this
 		const channels = {}
+
+		const outputs = this.outputs
+			.map( output => output.toRaw() )
+			.filter( ch => ch )
 
 		for ( const id in this.channels )
 			if ( this.channels.hasOwnProperty( id ) )
