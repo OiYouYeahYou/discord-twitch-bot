@@ -1,12 +1,12 @@
 import { Client, Message } from 'discord.js'
 
 import { print, isPrefixed } from './util'
-import { token, tickInterval, saveInterval, channelPath } from './constants'
+import { token, tickInterval, saveInterval, statePath } from './constants'
 import { main } from './messageHandling'
 import { tick } from './tick'
 import Store from './classes/Store'
 
-export const store = new Store( channelPath )
+export const store = new Store( statePath )
 
 export const bot = new Client()
 bot.on( 'message', function messageReceived( message: Message ) {

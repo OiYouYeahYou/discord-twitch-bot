@@ -47,4 +47,5 @@ init
 
 .DS_Store
 config.json
+.state.json
 lib/

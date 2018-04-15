@@ -1,3 +1,5 @@
+import { print } from './util'
+
 export interface IConfig {
 	discordToken: string
 	twitchClientID: string
@@ -5,8 +7,20 @@ export interface IConfig {
 	save: number
 }
 
+const expectedKeys = [
+	'discordToken',
+	'twitchClientID',
+	'tick',
+	'save',
+]
+
 const config: IConfig = require( '../config.json' )
 const { twitchClientID, discordToken } = config
+
+for ( var key in config )
+	if ( config.hasOwnProperty( key ) )
+		if ( !( expectedKeys.indexOf( key ) + 1 ) )
+			print( `Unexpected config key: ${ key }` )
 
 if ( !twitchClientID )
 	throw new Error( 'No Twitch client-id' )
@@ -24,4 +38,4 @@ export const headers = {
 	Accept: 'application/vnd.twitchtv.v3+json'
 }
 
-export const channelPath = __dirname + '/../.channels'
+export const statePath = __dirname + '/../.state.json'
