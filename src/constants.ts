@@ -1,4 +1,4 @@
-import { print } from './util'
+import { print } from './util/print'
 
 export interface IConfig {
 	discordToken: string

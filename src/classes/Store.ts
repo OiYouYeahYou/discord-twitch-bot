@@ -1,11 +1,11 @@
 import { normalize } from 'path'
 import { writeFileSync, readFileSync } from 'fs'
-import { print } from '../util'
-import { Guild, GuildChannel } from 'discord.js'
+import { print } from '../util/print'
+import { Guild, GuildChannel, Client } from 'discord.js'
 import { GuildGonfig, IRawGuildGonfig } from '../classes/GuildConfig'
 
 export default class Store {
-	constructor(path: string) {
+	constructor(path: string, private bot: Client) {
 		this.path = normalize(path)
 	}
 
@@ -40,7 +40,7 @@ export default class Store {
 		this.configs = {}
 
 		for (const x in saveSate.configs)
-			this.configs[x] = new GuildGonfig(saveSate.configs[x])
+			this.configs[x] = new GuildGonfig(saveSate.configs[x], this.bot)
 	}
 
 	getConfig(guild: Guild) {
@@ -52,7 +52,7 @@ export default class Store {
 	}
 
 	private addConfig(id) {
-		return (this.configs[id] = GuildGonfig.create(id))
+		return (this.configs[id] = GuildGonfig.create(id, this.bot))
 	}
 
 	streamerRecordExists(guild: Guild, name: string) {

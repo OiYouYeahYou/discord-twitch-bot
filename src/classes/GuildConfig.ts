@@ -1,4 +1,4 @@
-import { GuildChannel } from 'discord.js'
+import { GuildChannel, Client } from 'discord.js'
 import { StreamerRecord, IRawStreamerRecord } from './StreamerRecord'
 import { ChannelHandler } from './ChannelHandler'
 
@@ -10,11 +10,13 @@ const defalutConfig = {
 }
 
 export class GuildGonfig {
-	constructor(input: IRawGuildGonfig) {
+	constructor(input: IRawGuildGonfig, private bot: Client) {
 		this.id = input.id
 		this.prefix = input.prefix
 		this.role = input.role
-		this.outputs = input.outputs.map(channel => new ChannelHandler(channel))
+		this.outputs = input.outputs.map(
+			channel => new ChannelHandler(channel, bot)
+		)
 
 		this.channels = {}
 		for (const id in input.channels) {
@@ -48,7 +50,7 @@ export class GuildGonfig {
 	addOutput(output: GuildChannel) {
 		if (this.outputs.some(out => out.channelID === output.id)) return false
 
-		this.outputs.push(new ChannelHandler(output.id))
+		this.outputs.push(new ChannelHandler(output.id, this.bot))
 	}
 
 	removeOutput(idToRemove: string) {
@@ -66,9 +68,9 @@ export class GuildGonfig {
 		return Object.values(this.channels)
 	}
 
-	static create(id: string) {
+	static create(id: string, bot: Client) {
 		const config = Object.assign({ id }, defalutConfig)
-		return new this(config)
+		return new this(config, bot)
 	}
 
 	toRaw(): IRawGuildGonfig {
@@ -77,7 +79,7 @@ export class GuildGonfig {
 
 		const outputs = this.outputs
 			.map(output => output.toRaw())
-			.filter(ch => ch)
+			.filter(Boolean)
 
 		for (const id in this.channels)
 			if (this.channels.hasOwnProperty(id))

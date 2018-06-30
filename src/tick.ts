@@ -1,30 +1,31 @@
-import { Guild } from 'discord.js'
+import { Guild, Client } from 'discord.js'
 
-import { bot, store } from '.'
 import { getStream, APIError } from './twitch'
-import { print } from './util'
+import { print } from './util/print'
 import { Embed } from './discord'
 import { StreamerRecord } from './classes/StreamerRecord'
 import { ChannelHandler } from './classes/ChannelHandler'
+import Store from './classes/Store'
 
-export async function tick() {
-	for (const server of store.configArray()) {
-		const { id, outputs } = server
+export const Tick = (bot: Client, store: Store) =>
+	async function tick() {
+		for (const server of store.configArray()) {
+			const { id, outputs } = server
 
-		const guild = bot.guilds.find('id', id)
-		if (!guild) continue
+			const guild = bot.guilds.find('id', id)
+			if (!guild) continue
 
-		for (const twitchChannel of server.recordsArray()) {
-			if (!outputs.length) continue
+			for (const twitchChannel of server.recordsArray()) {
+				if (!outputs.length) continue
 
-			try {
-				await apiCallback(outputs, twitchChannel, guild)
-			} catch (err) {
-				print('Tick error', err)
+				try {
+					await apiCallback(outputs, twitchChannel, guild)
+				} catch (err) {
+					print('Tick error', err)
+				}
 			}
 		}
 	}
-}
 
 async function apiCallback(
 	channels: ChannelHandler[],

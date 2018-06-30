@@ -1,14 +1,16 @@
 import { Client, Message } from 'discord.js'
 
-import { print, isPrefixed } from './util'
+import { isPrefixed } from './util/util'
+import { print } from './util/print'
 import { token, tickInterval, saveInterval, statePath } from './constants'
 import { main } from './messageHandling'
-import { tick } from './tick'
+import { Tick } from './tick'
 import Store from './classes/Store'
 
-export const store = new Store(statePath)
-
 export const bot = new Client()
+export const store = new Store(statePath, bot)
+const tick = Tick(bot, store)
+
 bot.on('message', function messageReceived(message: Message) {
 	const { guild } = message
 
@@ -19,7 +21,7 @@ bot.on('message', function messageReceived(message: Message) {
 	const content = message.content.trim()
 
 	if (isPrefixed(prefix, content))
-		return main.run(message, store, server, content, prefix)
+		return main.run(message, store, server, tick, content, prefix)
 })
 
 start().catch(err => {
@@ -37,8 +39,7 @@ async function start() {
 	bot.setInterval(tick, tickInterval)
 	bot.setInterval(() => store.save(), saveInterval)
 
-	const invite = await bot.generateInvite([])
-	print(invite)
+	print(await bot.generateInvite([]))
 
-	require('./exitHandling')
+	require('./exitHandling')(store)
 }

@@ -1,8 +1,7 @@
-import { splitByFirstSpace, stringSort } from './util'
+import { splitByFirstSpace, stringSort } from './util/util'
 import List from './classes/List'
 import Request from './classes/Request'
 import { getChannel } from './twitch'
-import { tick } from './tick'
 import { APIError } from './twitch'
 
 export const main = new List()
@@ -46,7 +45,7 @@ async function add(req: Request, content: string) {
 
 	store.addStreamer(guild, name)
 
-	await tick()
+	await req.tick()
 
 	return req.send(`Added ${name}.`)
 }
@@ -72,7 +71,7 @@ function list(req: Request) {
 }
 
 async function callTick(req: Request) {
-	tick()
+	await req.tick()
 	return req.delete()
 }
 

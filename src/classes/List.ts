@@ -5,7 +5,7 @@ import {
 	padRight,
 	processCommandString,
 	removePrefix,
-} from '../util'
+} from '../util/util'
 import Request from './Request'
 import { hasAuthorityForCommand, unauthorised } from '../authority'
 import Module from './Module'
@@ -122,10 +122,19 @@ export default class List {
 		message: Message,
 		store: Store,
 		config: GuildGonfig,
+		tick: () => Promise<void>,
 		text: string,
 		prefix: string
 	) {
-		const req = new Request(this, store, config, message, prefix, text)
+		const req = new Request(
+			this,
+			store,
+			config,
+			message,
+			tick,
+			prefix,
+			text
+		)
 		const commandString = removePrefix(prefix, text)
 
 		await this.commandRunner(req, commandString)

@@ -1,32 +1,19 @@
 import { Message } from 'discord.js'
-import { destructingReply, somethingWentWrong } from '../util'
+import { timer } from '../util/util'
 import List from './List'
 import Store from './Store'
 import { GuildGonfig } from './GuildConfig'
 
 export default class Request {
 	constructor(
-		list: List,
-		store: Store,
-		config: GuildGonfig,
-		message: Message,
-		prefix: string,
-		text: string
-	) {
-		this.list = list
-		this.store = store
-		this.guildConfig = config
-		this.message = message
-		this.prefix = prefix
-		this.text = text
-	}
-
-	readonly list: List
-	readonly store: Store
-	readonly guildConfig: GuildGonfig
-	readonly message: Message
-	readonly prefix: string
-	readonly text: string
+		readonly list: List,
+		readonly store: Store,
+		readonly guildConfig: GuildGonfig,
+		readonly message: Message,
+		readonly tick: () => Promise<void>,
+		readonly prefix: string,
+		readonly text: string
+	) {}
 
 	get guild() {
 		return this.message.guild
@@ -60,15 +47,24 @@ export default class Request {
 	}
 
 	async sendCode(lang: string, content: any, options?: any) {
-		return await this.message.channel.sendCode(lang, content)
+		return this.message.channel.sendCode(lang, content)
 	}
 
 	async reply(text, options?: any) {
-		return await this.message.reply(text, options)
+		return this.message.reply(text, options)
 	}
 
 	async destructingReply(text: string) {
-		return await destructingReply(this.message, text)
+		const msg = await this.reply(text)
+
+		await timer(10 * 1000)
+
+		try {
+			// @ts-ignores
+			await msg.delete()
+		} catch (error) {
+			console.error(error)
+		}
 	}
 
 	async delete() {
@@ -76,7 +72,8 @@ export default class Request {
 	}
 
 	async somethingWentWrong(err) {
-		return somethingWentWrong(this.message, err)
+		console.log(err)
+		return this.destructingReply(`Something went wrong`)
 	}
 
 	async missingArguments() {
