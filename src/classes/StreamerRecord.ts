@@ -1,10 +1,10 @@
 const defaultRecord = {
 	online: false,
-	current: 0
+	current: 0,
 }
 
 export class StreamerRecord {
-	constructor( input: IRawStreamerRecord ) {
+	constructor(input: IRawStreamerRecord) {
 		this.name = input.name
 		this.online = input.online
 		this.current = input.current
@@ -24,25 +24,25 @@ export class StreamerRecord {
 	}
 
 	setOffline() {
-		this.setter( false, 0 )
+		this.setter(false, 0)
 	}
 
-	setOnline( stream: { _id: number } ) {
-		this.setter( true, stream._id )
+	setOnline(stream: { _id: number }) {
+		this.setter(true, stream._id)
 	}
 
-	private setter( state: boolean, current: number ) {
+	private setter(state: boolean, current: number) {
 		this.online = state
 		this.current = current
 	}
 
-	isSameStream( stream: { _id: number } ) {
+	isSameStream(stream: { _id: number }) {
 		return this.current == stream._id
 	}
 
-	static create( name ) {
-		const config = Object.assign( { name }, defaultRecord )
-		return new this( config )
+	static create(name) {
+		const config = Object.assign({ name }, defaultRecord)
+		return new this(config)
 	}
 
 	toRaw(): IRawStreamerRecord {

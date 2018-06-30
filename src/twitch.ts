@@ -1,43 +1,41 @@
 import { headers, host } from './constants'
 import { get } from 'https'
 
-export async function getStream( name: string ) {
-	return _get<IStreamRespone>( `streams/${ name.trim() }` )
+export async function getStream(name: string) {
+	return _get<IStreamRespone>(`streams/${name.trim()}`)
 }
 
-export async function getChannel( name: string ) {
-	return _get<IChannelResponse>( `channels/${ name.trim() }` )
+export async function getChannel(name: string) {
+	return _get<IChannelResponse>(`channels/${name.trim()}`)
 }
 
-export function _get<T>( endpoint: string ): Promise<T | APIError> {
-	const path = `/kraken/${ endpoint }`
+export function _get<T>(endpoint: string): Promise<T | APIError> {
+	const path = `/kraken/${endpoint}`
 	const opt = { host, path, headers }
 
-	return new Promise( ( resolve, reject ) => {
-		const getter = get( opt, ( res ) => {
+	return new Promise((resolve, reject) => {
+		const getter = get(opt, res => {
 			var body = ''
-			res.on( 'data', chunk => body += chunk )
-			res.on( 'end', () => {
+			res.on('data', chunk => (body += chunk))
+			res.on('end', () => {
 				try {
-					const response = JSON.parse( body )
-					if ( response.error )
-						return resolve( response )
+					const response = JSON.parse(body)
+					if (response.error) return resolve(response)
 
-					resolve( response )
+					resolve(response)
+				} catch (err) {
+					reject(err)
 				}
-				catch ( err ) {
-					reject( err )
-				}
-			} )
-		} )
+			})
+		})
 
-		getter.on( 'error', reject )
-	} )
+		getter.on('error', reject)
+	})
 }
 
 export class APIError extends Error {
-	constructor( err ) {
-		super( err.message )
+	constructor(err) {
+		super(err.message)
 		this.status = err.status
 		this.error = err.error
 	}
@@ -97,4 +95,3 @@ interface IPreviewResponse {
 	readonly large: url
 	readonly template: urlTemplate
 }
-

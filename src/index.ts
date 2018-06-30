@@ -6,40 +6,39 @@ import { main } from './messageHandling'
 import { tick } from './tick'
 import Store from './classes/Store'
 
-export const store = new Store( statePath )
+export const store = new Store(statePath)
 
 export const bot = new Client()
-bot.on( 'message', function messageReceived( message: Message ) {
+bot.on('message', function messageReceived(message: Message) {
 	const { guild } = message
 
-	if ( !guild )
-		return
+	if (!guild) return
 
-	const server = store.getConfig( guild )
+	const server = store.getConfig(guild)
 	const { prefix } = server
 	const content = message.content.trim()
 
-	if ( isPrefixed( prefix, content ) )
-		return main.run( message, store, server, content, prefix )
-} )
+	if (isPrefixed(prefix, content))
+		return main.run(message, store, server, content, prefix)
+})
 
-start().catch( err => {
-	print( 'An error occured while loging in:', err )
-	process.exit( 1 )
-} )
+start().catch(err => {
+	print('An error occured while loging in:', err)
+	process.exit(1)
+})
 
 async function start() {
-	await bot.login( token )
-	print( 'Logged in with token ' + token )
+	await bot.login(token)
+	print('Logged in with token ' + token)
 
 	store.load()
 
 	await tick()
-	bot.setInterval( tick, tickInterval )
-	bot.setInterval( () => store.save(), saveInterval )
+	bot.setInterval(tick, tickInterval)
+	bot.setInterval(() => store.save(), saveInterval)
 
-	const invite = await bot.generateInvite( [] )
-	print( invite )
+	const invite = await bot.generateInvite([])
+	print(invite)
 
-	require( './exitHandling' )
+	require('./exitHandling')
 }

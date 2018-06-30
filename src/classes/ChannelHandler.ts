@@ -1,17 +1,15 @@
-import { bot } from ".."
-import { TextChannel } from "discord.js"
-
+import { bot } from '..'
+import { TextChannel } from 'discord.js'
 
 export class ChannelHandler {
-	constructor( channelID: string ) {
+	constructor(channelID: string) {
 		this.channelID = channelID
 
-		const channel = bot.channels.find( 'id', channelID )
-		if ( !( channel instanceof TextChannel ) ) {
+		const channel = bot.channels.find('id', channelID)
+		if (!(channel instanceof TextChannel)) {
 			this.isMissing = false
 			return
-
-		} else if ( !channel ) {
+		} else if (!channel) {
 			this.isInvaild = true
 			return
 		}
@@ -30,15 +28,13 @@ export class ChannelHandler {
 		return this.channel.name
 	}
 
-	send( message ) {
-		if ( !this.isInvaild )
-			return
+	send(message) {
+		if (!this.isInvaild) return
 
-		return this.channel.send( message )
+		return this.channel.send(message)
 	}
 
 	toRaw() {
-		if ( !this.isInvaild )
-			return this.channelID
+		if (!this.isInvaild) return this.channelID
 	}
 }

@@ -5,25 +5,22 @@ import { getStream, APIError } from './twitch'
 import { print } from './util'
 import { Embed } from './discord'
 import { StreamerRecord } from './classes/StreamerRecord'
-import { ChannelHandler } from './classes/ChannelHandler';
-
+import { ChannelHandler } from './classes/ChannelHandler'
 
 export async function tick() {
-	for ( const server of store.configArray() ) {
+	for (const server of store.configArray()) {
 		const { id, outputs } = server
 
-		const guild = bot.guilds.find( 'id', id )
-		if ( !guild )
-			continue
+		const guild = bot.guilds.find('id', id)
+		if (!guild) continue
 
-		for ( const twitchChannel of server.recordsArray() ) {
-			if ( !outputs.length )
-				continue
+		for (const twitchChannel of server.recordsArray()) {
+			if (!outputs.length) continue
 
 			try {
-				await apiCallback( outputs, twitchChannel, guild )
-			} catch ( err ) {
-				print( 'Tick error', err )
+				await apiCallback(outputs, twitchChannel, guild)
+			} catch (err) {
+				print('Tick error', err)
 			}
 		}
 	}
@@ -34,20 +31,22 @@ async function apiCallback(
 	twitchChannel: StreamerRecord,
 	guild: Guild
 ) {
-	const response = await getStream( twitchChannel.name )
-	if ( response instanceof APIError ) {
-		if ( response.status === 404 )
-			print( `Unable to find ${ twitchChannel.name } in ${ guild.name }` )
+	const response = await getStream(twitchChannel.name)
+	if (response instanceof APIError) {
+		if (response.status === 404)
+			print(`Unable to find ${twitchChannel.name} in ${guild.name}`)
 
 		return
 	}
 
 	const { stream } = response
-	if ( !stream ) {
-		if ( twitchChannel.isOnline )
+	if (!stream) {
+		if (twitchChannel.isOnline)
 			sendToChannels(
-				guild, twitchChannel, channels,
-				`${ twitchChannel.name }'s stream is over`,
+				guild,
+				twitchChannel,
+				channels,
+				`${twitchChannel.name}'s stream is over`,
 				'end of stream'
 			)
 
@@ -55,13 +54,12 @@ async function apiCallback(
 		return
 	}
 
-	if ( twitchChannel.isSameStream( stream ) )
-		return
+	if (twitchChannel.isSameStream(stream)) return
 
-	twitchChannel.setOnline( stream )
+	twitchChannel.setOnline(stream)
 
-	const embed = Embed( stream )
-	sendToChannels( guild, twitchChannel, channels, embed, 'stream live' )
+	const embed = Embed(stream)
+	sendToChannels(guild, twitchChannel, channels, embed, 'stream live')
 }
 
 async function sendToChannels(
@@ -71,12 +69,21 @@ async function sendToChannels(
 	message,
 	type: string
 ) {
-	for ( const channel of channels ) {
+	for (const channel of channels) {
 		try {
-			await channel.send( message )
-			print( `Sent ${ type } message for ${ streamer.name } to channel ${ channel.name } on ${ guild.name }` )
-		} catch ( err ) {
-			print( `Failed to ${ type } message for ${ streamer.name } to ${ channel.name } on ${ guild.name }`, err )
+			await channel.send(message)
+			print(
+				`Sent ${type} message for ${streamer.name} to channel ${
+					channel.name
+				} on ${guild.name}`
+			)
+		} catch (err) {
+			print(
+				`Failed to ${type} message for ${streamer.name} to ${
+					channel.name
+				} on ${guild.name}`,
+				err
+			)
 		}
 	}
 }
