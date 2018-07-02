@@ -21,7 +21,7 @@ export const Tick = (bot: Client, store: Store) =>
 				try {
 					await apiCallback(outputs, twitchChannel, guild)
 				} catch (err) {
-					print('Tick error', err)
+					print('Tick error', err.message)
 				}
 			}
 		}

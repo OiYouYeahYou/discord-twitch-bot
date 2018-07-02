@@ -1,16 +1,13 @@
 import { Message } from 'discord.js'
 import { timer } from '../util/util'
-import List from './List'
-import Store from './Store'
 import { GuildGonfig } from './GuildConfig'
+import App from './App'
 
 export default class Request {
 	constructor(
-		readonly list: List,
-		readonly store: Store,
+		readonly app: App,
 		readonly guildConfig: GuildGonfig,
 		readonly message: Message,
-		readonly tick: () => Promise<void>,
 		readonly prefix: string,
 		readonly text: string
 	) {}
@@ -41,13 +38,21 @@ export default class Request {
 		return this.message.member.nickname || this.message.author.username
 	}
 
+	public get list() {
+		return this.app.list
+	}
+
+	public get store() {
+		return this.app.store
+	}
+
+	tick() {
+		return this.app.tick()
+	}
+
 	async send(text, options?: any) {
 		const message = await this.message.channel.send(text, options)
 		return Array.isArray(message) ? message[0] : message
-	}
-
-	async sendCode(lang: string, content: any, options?: any) {
-		return this.message.channel.sendCode(lang, content)
 	}
 
 	async reply(text, options?: any) {

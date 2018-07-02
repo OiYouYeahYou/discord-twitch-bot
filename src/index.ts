@@ -6,28 +6,36 @@ import { token, tickInterval, saveInterval, statePath } from './constants'
 import { main } from './messageHandling'
 import { Tick } from './tick'
 import Store from './classes/Store'
+import App from './classes/App'
+import { setupExitHandling } from './exitHandling'
 
 export const bot = new Client()
 export const store = new Store(statePath, bot)
 const tick = Tick(bot, store)
+const app = new App(bot, tick, store, main)
 
-bot.on('message', function messageReceived(message: Message) {
-	const { guild } = message
-
-	if (!guild) return
-
-	const server = store.getConfig(guild)
-	const { prefix } = server
-	const content = message.content.trim()
-
-	if (isPrefixed(prefix, content))
-		return main.run(message, store, server, tick, content, prefix)
-})
+bot.on('error', error => print(error.message))
+bot.on('disconnect', event => print('disconnection'))
+bot.on('reconnecting', () => print('reconnecting'))
+bot.on('message', messageReceived)
 
 start().catch(err => {
 	print('An error occured while loging in:', err)
 	process.exit(1)
 })
+
+function messageReceived(message: Message) {
+	const { guild } = message
+
+	if (!guild) return
+
+	const serverConfig = store.getConfig(guild)
+	const { prefix } = serverConfig
+	const content = message.content.trim()
+
+	if (isPrefixed(prefix, content))
+		return main.run(app, message, serverConfig, content, prefix)
+}
 
 async function start() {
 	await bot.login(token)
@@ -41,5 +49,5 @@ async function start() {
 
 	print(await bot.generateInvite([]))
 
-	require('./exitHandling')(store)
+	setupExitHandling(store)
 }
