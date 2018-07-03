@@ -1,12 +1,12 @@
 import { Message } from 'discord.js'
 import { timer } from '../util/util'
-import { GuildGonfig } from './GuildConfig'
+import { GuildConfig } from './GuildConfig'
 import App from './App'
 
 export default class Request {
 	constructor(
 		readonly app: App,
-		readonly guildConfig: GuildGonfig,
+		readonly guildConfig: GuildConfig,
 		readonly message: Message,
 		readonly prefix: string,
 		readonly text: string
@@ -73,7 +73,9 @@ export default class Request {
 	}
 
 	async delete() {
-		if (this.message.deletable) return await this.message.delete()
+		if (this.message.deletable) {
+			return this.message.delete()
+		}
 	}
 
 	async somethingWentWrong(err) {

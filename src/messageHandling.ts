@@ -27,7 +27,7 @@ function remove(req: Request, args: string) {
 	if (!store.streamerRecordExists(guild, name))
 		return req.send(`${name} isn't in the list.`)
 
-	store.addStreamer(guild, name)
+	store.removeStreamer(guild, name)
 
 	return req.send(`Removed ${name}.`)
 }
@@ -50,22 +50,26 @@ async function add(req: Request, content: string) {
 	return req.send(`Added ${name}.`)
 }
 
-function list(req: Request) {
+async function list(req: Request) {
 	const records = Object.values(req.guildConfig.channels)
 
-	if (!records.length) return req.send('The list is empty.')
+	if (!records.length) {
+		return req.send('The list is empty.')
+	}
 
 	records.sort(stringSort)
 
 	const offline = []
 	const live = []
 
-	for (const { online, name } of records) (online ? live : offline).push(name)
+	for (const { online, name } of records) {
+		;(online ? live : offline).push(name)
+	}
 
 	const liveString = live.join(', ')
 	const offlineString = offline.join(', ')
 
-	return req.send(
+	return await req.send(
 		`\n\nOnline:\n` + liveString + `\n\nOffline:\n` + offlineString
 	)
 }
@@ -82,11 +86,13 @@ function configList(req: Request) {
 	msg.push('```\n')
 	msg.push('prefix    ' + prefix)
 	msg.push('role      ' + role)
+	msg.push('streamers:')
 
 	const space = '          '
 	msg.push(
 		Object.values(channels)
 			.map(c => space + c)
+			.sort()
 			.join(',\n')
 	)
 	msg.push('```')
@@ -99,10 +105,11 @@ function configPfx(req: Request, args: string) {
 	const { prefix } = guildConfig
 	let [newPrefix] = splitByFirstSpace(args)
 
-	if (newPrefix.replace(/\s/g, '').length === 0)
-		return this.missingArguments()
-	else if (newPrefix == prefix) return req.send('Prefix already is ' + prefix)
-	else {
+	if (newPrefix.replace(/\s/g, '').length === 0) {
+		return req.missingArguments()
+	} else if (newPrefix == prefix) {
+		return req.send('Prefix already is ' + prefix)
+	} else {
 		guildConfig.prefix = newPrefix
 		return req.send('Changed prefix to ' + prefix)
 	}
@@ -111,12 +118,16 @@ function configPfx(req: Request, args: string) {
 function configRole(req: Request, args: string) {
 	const newRole = args
 
-	if (newRole.replace(/\s/g, '').length === 0) return this.missingArguments()
-	else {
+	if (newRole.replace(/\s/g, '').length === 0) {
+		return req.missingArguments()
+	} else {
 		const { guildConfig } = req
+		const oldRole = guildConfig.role
 
 		guildConfig.role = newRole
-		return req.send('Changed role to ' + guildConfig.role)
+		return req.send(
+			`Changed role to  ${guildConfig.role} (from: ${oldRole})`
+		)
 	}
 }
 
@@ -130,7 +141,9 @@ function addChannel(req: Request, args: string) {
 	const { channels } = message.mentions
 
 	if (channels.size) {
-		for (const [, channel] of channels) store.addOutput(guild, channel)
+		for (const [, channel] of channels) {
+			store.addOutput(guild, channel)
+		}
 
 		return req.send('Done')
 	}
@@ -164,7 +177,9 @@ function rmChannel(req: Request, args: string) {
 	const name = args.replace(/\s/g, '-')
 	const channel = guild.channels.find('name', name)
 
-	if (!channel) return req.send('No Channel found by the name' + name)
+	if (!channel) {
+		return req.send('No Channel found by the name' + name)
+	}
 
 	store.removeOutput(guild, channel.id)
 

@@ -49,6 +49,10 @@ export class StreamerRecord {
 		const { name, online, current } = this
 		return { name, online, current }
 	}
+
+	toString() {
+		return this.name
+	}
 }
 
 export interface IRawStreamerRecord {

@@ -11,7 +11,7 @@ import { hasAuthorityForCommand, unauthorised } from '../authority'
 import Module from './Module'
 import AListItem, { IAbstractListItem, ListItemInfo } from './AListItem'
 import { Message } from 'discord.js'
-import { GuildGonfig } from './GuildConfig'
+import { GuildConfig } from './GuildConfig'
 import App from './App'
 
 export default class List {
@@ -121,7 +121,7 @@ export default class List {
 	async run(
 		app: App,
 		message: Message,
-		config: GuildGonfig,
+		config: GuildConfig,
 		text: string,
 		prefix: string
 	) {
@@ -136,15 +136,15 @@ export default class List {
 	 * or informs User of missing command or lacking privlages
 	 */
 	async commandRunner(req: Request, text: string) {
-		let [command, args] = processCommandString(text)
+		const [command, args] = processCommandString(text)
 
 		// Jason: Do not remove this!!! It is correct
 		if (!command) return // Ignore prefix only string
 
 		const wrapper = this.getCommandWrapper(command)
 
-		if (!wrapper) return
 		// Ignore
+		if (!wrapper) return
 		else if (!hasAuthorityForCommand(req, wrapper))
 			return unauthorised(req, wrapper)
 

@@ -9,7 +9,7 @@ const defalutConfig = {
 	channels: {},
 }
 
-export class GuildGonfig {
+export class GuildConfig {
 	constructor(input: IRawGuildGonfig, private bot: Client) {
 		this.id = input.id
 		this.prefix = input.prefix
