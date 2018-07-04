@@ -22,13 +22,8 @@ if (!twitchClientID) throw new Error('No Twitch client-id')
 if (!discordToken) throw new Error('No Discord Token')
 
 export const token = discordToken
+export const twitchToken = twitchClientID
 export const tickInterval = Number(config.tick || 3 * 60) * 1000
 export const saveInterval = Number(config.save || 5 * 60) * 1000
-
-export const host = 'api.twitch.tv'
-export const headers = {
-	'Client-ID': twitchClientID,
-	Accept: 'application/vnd.twitchtv.v3+json',
-}
 
 export const statePath = __dirname + '/../.state.json'

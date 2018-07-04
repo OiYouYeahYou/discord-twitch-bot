@@ -38,12 +38,16 @@ export default class Request {
 		return this.message.member.nickname || this.message.author.username
 	}
 
-	public get list() {
+	get list() {
 		return this.app.list
 	}
 
-	public get store() {
+	get store() {
 		return this.app.store
+	}
+
+	get twitch() {
+		return this.app.twitch
 	}
 
 	tick() {

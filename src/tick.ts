@@ -1,25 +1,25 @@
-import { Guild, Client } from 'discord.js'
+import { Guild } from 'discord.js'
 
-import { getStream, APIError } from './twitch'
 import { print } from './util/print'
 import { Embed } from './discord'
 import { StreamerRecord } from './classes/StreamerRecord'
 import { ChannelHandler } from './classes/ChannelHandler'
-import Store from './classes/Store'
+import App from './classes/App'
+import { APIError } from './twitch'
 
-export const Tick = (bot: Client, store: Store) =>
+export const Tick = (app: App) =>
 	async function tick() {
-		for (const server of store.configArray()) {
+		for (const server of app.store.configArray()) {
 			const { id, outputs } = server
 
-			const guild = bot.guilds.find('id', id)
+			const guild = app.bot.guilds.find('id', id)
 			if (!guild) continue
 
 			for (const twitchChannel of server.recordsArray()) {
 				if (!outputs.length) continue
 
 				try {
-					await apiCallback(outputs, twitchChannel, guild)
+					await apiCallback(app, outputs, twitchChannel, guild)
 				} catch (err) {
 					print('Tick error', err.message)
 				}
@@ -28,11 +28,12 @@ export const Tick = (bot: Client, store: Store) =>
 	}
 
 async function apiCallback(
+	app: App,
 	channels: ChannelHandler[],
 	twitchChannel: StreamerRecord,
 	guild: Guild
 ) {
-	const response = await getStream(twitchChannel.name)
+	const response = await app.twitch.getStream(twitchChannel.name)
 	if (response instanceof APIError) {
 		if (response.status === 404)
 			print(`Unable to find ${twitchChannel.name} in ${guild.name}`)

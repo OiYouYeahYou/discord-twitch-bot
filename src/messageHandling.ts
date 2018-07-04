@@ -1,7 +1,6 @@
 import { splitByFirstSpace, stringSort } from './util/util'
 import List from './classes/List'
 import Request from './classes/Request'
-import { getChannel } from './twitch'
 import { APIError } from './twitch'
 
 export const main = new List()
@@ -39,7 +38,7 @@ async function add(req: Request, content: string) {
 	if (store.streamerRecordExists(guild, name))
 		return req.send(name + ' is already in the list.')
 
-	const res = await getChannel(name)
+	const res = await req.twitch.getChannel(name)
 	if (res instanceof APIError)
 		return req.send(name + " doesn't seem to exist.")
 

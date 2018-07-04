@@ -1,36 +1,45 @@
-import { headers, host } from './constants'
 import { get } from 'https'
 
-export async function getStream(name: string) {
-	return _get<IStreamRespone>(`streams/${name.trim()}`)
-}
+export class Twitch {
+	private host = 'api.twitch.tv'
 
-export async function getChannel(name: string) {
-	return _get<IChannelResponse>(`channels/${name.trim()}`)
-}
+	constructor(private twitchClientID: string) {}
 
-export function _get<T>(endpoint: string): Promise<T | APIError> {
-	const path = `/kraken/${endpoint}`
-	const opt = { host, path, headers }
+	getStream(name: string) {
+		return this._get<IStreamRespone>(`streams/${name.trim()}`)
+	}
 
-	return new Promise((resolve, reject) => {
-		const getter = get(opt, res => {
-			var body = ''
-			res.on('data', chunk => (body += chunk))
-			res.on('end', () => {
-				try {
-					const response = JSON.parse(body)
-					if (response.error) return resolve(response)
+	getChannel(name: string) {
+		return this._get<IChannelResponse>(`channels/${name.trim()}`)
+	}
 
-					resolve(response)
-				} catch (err) {
-					reject(err)
-				}
+	_get<T>(endpoint: string): Promise<T | APIError> {
+		const path = `/kraken/${endpoint}`
+		const headers = {
+			'Client-ID': this.twitchClientID,
+			Accept: 'application/vnd.twitchtv.v3+json',
+		}
+		const opt = { host: this.host, path, headers }
+
+		return new Promise((resolve, reject) => {
+			const getter = get(opt, res => {
+				var body = ''
+				res.on('data', chunk => (body += chunk))
+				res.on('end', () => {
+					try {
+						const response = JSON.parse(body)
+						if (response.error) return resolve(response)
+
+						resolve(response)
+					} catch (err) {
+						reject(err)
+					}
+				})
 			})
-		})
 
-		getter.on('error', reject)
-	})
+			getter.on('error', reject)
+		})
+	}
 }
 
 export class APIError extends Error {

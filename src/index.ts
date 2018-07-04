@@ -4,15 +4,13 @@ import { isPrefixed } from './util/util'
 import { print } from './util/print'
 import { token, tickInterval, saveInterval, statePath } from './constants'
 import { main } from './messageHandling'
-import { Tick } from './tick'
 import Store from './classes/Store'
 import App from './classes/App'
 import { setupExitHandling } from './exitHandling'
 
 export const bot = new Client()
 export const store = new Store(statePath, bot)
-const tick = Tick(bot, store)
-const app = new App(bot, tick, store, main)
+const app = new App(bot, store, main)
 
 bot.on('error', error => print(error.message))
 bot.on('disconnect', event => print('disconnection'))
@@ -43,8 +41,8 @@ async function start() {
 
 	store.load()
 
-	await tick()
-	bot.setInterval(tick, tickInterval)
+	await app.tick()
+	bot.setInterval(app.tick, tickInterval)
 	bot.setInterval(() => store.save(), saveInterval)
 
 	print(await bot.generateInvite([]))
