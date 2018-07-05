@@ -51,6 +51,8 @@ export class GuildConfig {
 		if (this.outputs.some(out => out.channelID === output.id)) return false
 
 		this.outputs.push(new ChannelHandler(output.id, this.bot))
+
+		return true
 	}
 
 	removeOutput(idToRemove: string) {
@@ -61,7 +63,7 @@ export class GuildConfig {
 			existing => existing.channelID !== idToRemove
 		)
 
-		return this.outputs.length === oldLength
+		return this.outputs.length !== oldLength
 	}
 
 	recordsArray() {

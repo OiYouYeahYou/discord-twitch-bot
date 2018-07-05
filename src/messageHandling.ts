@@ -137,50 +137,66 @@ async function configSave(req: Request, args: string) {
 
 function addChannel(req: Request, args: string) {
 	const { store, guild, message } = req
-	const { channels } = message.mentions
+	const { mentions } = message
 
-	if (channels.size) {
-		for (const [, channel] of channels) {
-			store.addOutput(guild, channel)
+	if (mentions.channels.size) {
+		const channelsAdded = []
+		const channelsNotAdded = []
+
+		for (const [, channel] of mentions.channels) {
+			const success = store.addOutput(guild, channel)
+			;(success ? channelsAdded : channelsNotAdded).push(channel.name)
 		}
 
-		return req.send('Done')
+		let response = []
+
+		if (channelsAdded.length) {
+			const added = channelsAdded.sort().join(', ')
+			response.push(`Posting to ${added} channels`)
+		}
+
+		if (channelsNotAdded.length) {
+			const notAdded = channelsNotAdded.sort().join(', ')
+			response.push(`Already posting to ${notAdded} channels`)
+		}
+
+		return req.send(response.join('. '))
+	} else {
+		return req.send(
+			'You need to mention the channel, for example `#general`'
+		)
 	}
-
-	const channelName = args.replace(/\s/g, '-')
-
-	if (channels.exists('name', channelName)) {
-		const channel = channels.find('name', channelName)
-
-		store.addOutput(guild, channel)
-
-		return req.send(`Added ${channelName} to list of channels to post in.`)
-	}
-
-	return req.send(channelName + ' does not exist on this server.')
 }
 
 function rmChannel(req: Request, args: string) {
-	const { guild, message, store } = req
-	const { channels } = message.mentions
+	const { store, guild, message } = req
+	const { mentions } = message
 
-	if (channels.size) {
-		for (const [, channel] of channels)
-			store.removeOutput(guild, channel.id)
+	if (mentions.channels.size) {
+		const channelsRemoved = []
+		const channelsNotRemoved = []
 
-		return req.send('Done')
+		for (const [, channel] of mentions.channels) {
+			const success = store.removeOutput(guild, channel.id)
+			;(success ? channelsRemoved : channelsNotRemoved).push(channel.name)
+		}
+
+		let response = []
+
+		if (channelsRemoved.length) {
+			const added = channelsRemoved.sort().join(', ')
+			response.push(`No longer posting to ${added} channels`)
+		}
+
+		if (channelsNotRemoved.length) {
+			const notAdded = channelsNotRemoved.sort().join(', ')
+			response.push(`Was not posting to ${notAdded} channels`)
+		}
+
+		return req.send(response.join('. '))
+	} else {
+		return req.send(
+			'You need to mention the channel, for example `#general`'
+		)
 	}
-
-	if (!args) return this.missingArguments()
-
-	const name = args.replace(/\s/g, '-')
-	const channel = guild.channels.find('name', name)
-
-	if (!channel) {
-		return req.send('No Channel found by the name' + name)
-	}
-
-	store.removeOutput(guild, channel.id)
-
-	return req.send(`Removed ${name} from list of channels to post in.`)
 }
