@@ -82,9 +82,12 @@ export default class Request {
 		}
 	}
 
-	async somethingWentWrong(err) {
-		console.log(err)
-		return this.destructingReply(`Something went wrong`)
+	async fail(req, command, err) {
+		const failMessage = `Trying to run \`${command}\` has failed`
+
+		console.error(failMessage)
+		console.error(err)
+		await req.reply(failMessage)
 	}
 
 	async missingArguments() {

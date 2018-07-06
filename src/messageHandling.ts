@@ -109,8 +109,9 @@ function configPfx(req: Request, args: string) {
 	} else if (newPrefix == prefix) {
 		return req.send('Prefix already is ' + prefix)
 	} else {
+		const oldPrefix = guildConfig.prefix
 		guildConfig.prefix = newPrefix
-		return req.send('Changed prefix to ' + prefix)
+		return req.send(`Changed prefix to ${newPrefix} (from: ${oldPrefix})`)
 	}
 }
 

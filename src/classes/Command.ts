@@ -27,10 +27,6 @@ async function runner(
 	try {
 		await this.func(req, args)
 	} catch (error) {
-		const failMessage = `Trying to run \`${command}\` has failed`
-
-		console.error(failMessage)
-		console.error(error)
-		await req.reply(failMessage)
+		await req.fail(req, command, error)
 	}
 }
