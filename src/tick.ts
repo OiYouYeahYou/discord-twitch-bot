@@ -1,6 +1,5 @@
 import { Guild } from 'discord.js'
 
-import { print } from './util/print'
 import { Embed } from './discord'
 import { StreamerRecord } from './classes/StreamerRecord'
 import { ChannelHandler } from './classes/ChannelHandler'
@@ -12,7 +11,7 @@ export const Tick = (app: App) =>
 		for (const server of app.store.configArray()) {
 			const { id, outputs } = server
 
-			const guild = app.bot.guilds.find('id', id)
+			const guild = app.client.guilds.find('id', id)
 			if (!guild) continue
 
 			for (const twitchChannel of server.recordsArray()) {
@@ -21,7 +20,7 @@ export const Tick = (app: App) =>
 				try {
 					await apiCallback(app, outputs, twitchChannel, guild)
 				} catch (err) {
-					print('Tick error', err.message)
+					app.print('Tick error', err.message)
 				}
 			}
 		}
@@ -36,7 +35,7 @@ async function apiCallback(
 	const response = await app.twitch.getStream(twitchChannel.name)
 	if (response instanceof APIError) {
 		if (response.status === 404)
-			print(`Unable to find ${twitchChannel.name} in ${guild.name}`)
+			app.print(`Unable to find ${twitchChannel.name} in ${guild.name}`)
 
 		return
 	}
@@ -45,6 +44,7 @@ async function apiCallback(
 	if (!stream) {
 		if (twitchChannel.isOnline)
 			sendToChannels(
+				app,
 				guild,
 				twitchChannel,
 				channels,
@@ -61,10 +61,11 @@ async function apiCallback(
 	twitchChannel.setOnline(stream)
 
 	const embed = Embed(stream)
-	sendToChannels(guild, twitchChannel, channels, embed, 'stream live')
+	sendToChannels(app, guild, twitchChannel, channels, embed, 'stream live')
 }
 
 async function sendToChannels(
+	app: App,
 	guild: Guild,
 	streamer: StreamerRecord,
 	channels: ChannelHandler[],
@@ -74,13 +75,13 @@ async function sendToChannels(
 	for (const channel of channels) {
 		try {
 			await channel.send(message)
-			print(
+			app.print(
 				`Sent ${type} message for ${streamer.name} to channel ${
 					channel.name
 				} on ${guild.name}`
 			)
 		} catch (err) {
-			print(
+			app.print(
 				`Failed to ${type} message for ${streamer.name} to ${
 					channel.name
 				} on ${guild.name}`,

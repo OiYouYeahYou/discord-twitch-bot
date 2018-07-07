@@ -10,12 +10,12 @@ const defalutConfig = {
 }
 
 export class GuildConfig {
-	constructor(input: IRawGuildGonfig, private bot: Client) {
+	constructor(input: IRawGuildGonfig, private client: Client) {
 		this.id = input.id
 		this.prefix = input.prefix
 		this.role = input.role
 		this.outputs = input.outputs.map(
-			channel => new ChannelHandler(channel, bot)
+			channel => new ChannelHandler(channel, client)
 		)
 
 		this.channels = {}
@@ -50,7 +50,7 @@ export class GuildConfig {
 	addOutput(output: GuildChannel) {
 		if (this.outputs.some(out => out.channelID === output.id)) return false
 
-		this.outputs.push(new ChannelHandler(output.id, this.bot))
+		this.outputs.push(new ChannelHandler(output.id, this.client))
 
 		return true
 	}

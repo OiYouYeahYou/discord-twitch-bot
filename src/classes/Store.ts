@@ -1,11 +1,11 @@
 import { normalize } from 'path'
 import { writeFileSync, readFileSync } from 'fs'
-import { print } from '../util/print'
-import { Guild, GuildChannel, Client } from 'discord.js'
+import { Guild, GuildChannel } from 'discord.js'
 import { GuildConfig, IRawGuildGonfig } from '../classes/GuildConfig'
+import App from './App'
 
 export default class Store {
-	constructor(path: string, private bot: Client) {
+	constructor(public app: App, path: string) {
 		this.path = normalize(path)
 	}
 
@@ -20,18 +20,18 @@ export default class Store {
 		const json = JSON.stringify(this, null, 4)
 
 		writeFileSync(this.path, json)
-		print(`Saved state`)
+		this.app.print(`Saved state`)
 	}
 
 	load() {
-		print('Reading file ' + this.path)
+		this.app.print('Reading file ' + this.path)
 		try {
 			const file = readFileSync(this.path, { encoding: 'utf-8' })
 			const saveSate = JSON.parse(file)
 
 			this.populate(saveSate)
 		} catch (error) {
-			print
+			this.app.print('store load error: ', error)
 		}
 		this.save()
 	}
@@ -40,7 +40,10 @@ export default class Store {
 		this.configs = {}
 
 		for (const x in saveSate.configs)
-			this.configs[x] = new GuildConfig(saveSate.configs[x], this.bot)
+			this.configs[x] = new GuildConfig(
+				saveSate.configs[x],
+				this.app.client
+			)
 	}
 
 	getConfig(guild: Guild) {
@@ -52,7 +55,7 @@ export default class Store {
 	}
 
 	private addConfig(id) {
-		return (this.configs[id] = GuildConfig.create(id, this.bot))
+		return (this.configs[id] = GuildConfig.create(id, this.app.client))
 	}
 
 	streamerRecordExists(guild: Guild, name: string) {

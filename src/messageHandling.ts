@@ -132,7 +132,7 @@ function configRole(req: Request, args: string) {
 }
 
 async function configSave(req: Request, args: string) {
-	req.store.save()
+	req.app.save()
 	await req.send('Done')
 }
 

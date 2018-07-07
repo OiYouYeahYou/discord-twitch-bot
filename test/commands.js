@@ -15,9 +15,9 @@ class MockApp {
 		const existingChannels = ['C', 'D']
 
 		this.tick = sandbox.spy(() => Promise.resolve())
+		this.save = sandbox.spy()
 
 		this.store = {
-			save: sandbox.spy(),
 			removeStreamer: sandbox.spy(),
 			addStreamer: sandbox.spy(),
 			streamerRecordExists: sandbox.spy(
@@ -324,13 +324,13 @@ test('config role: does nothing if no arguments are provided', async t => {
 })
 
 test('config save: tells store to save', async t => {
-	const { req, store, sendTest, message } = MockRequest()
+	const { req, app, sendTest, message } = MockRequest()
 	const command = 'config save'
 
 	await main.commandRunner(req, command)
 
-	t.true(store.save.calledOnce)
-	t.true(store.save.calledBefore(message.channel.send))
+	t.true(app.save.calledOnce)
+	t.true(app.save.calledBefore(message.channel.send))
 
 	sendTest(t, 'statement that the state has been saved')
 })

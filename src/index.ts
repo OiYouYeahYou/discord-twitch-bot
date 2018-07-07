@@ -1,24 +1,21 @@
 import { Client, Message } from 'discord.js'
 
 import { isPrefixed } from './util/util'
-import { print } from './util/print'
-import { token, tickInterval, saveInterval, statePath } from './constants'
+import { token, tickInterval, saveInterval } from './constants'
 import { main } from './messageHandling'
-import Store from './classes/Store'
 import App from './classes/App'
 import { setupExitHandling } from './exitHandling'
 
-export const bot = new Client()
-export const store = new Store(statePath, bot)
-const app = new App(bot, store, main)
+export const client = new Client()
+const app = new App(client, main)
 
-bot.on('error', error => print(error.message))
-bot.on('disconnect', event => print('disconnection'))
-bot.on('reconnecting', () => print('reconnecting'))
-bot.on('message', messageReceived)
+client.on('error', error => app.print(error.message))
+client.on('disconnect', () => app.print('disconnection'))
+client.on('reconnecting', () => app.print('reconnecting'))
+client.on('message', messageReceived)
 
 start().catch(err => {
-	print('An error occured while loging in:', err)
+	app.print('An error occured while loging in:', err)
 	process.exit(1)
 })
 
@@ -27,7 +24,7 @@ function messageReceived(message: Message) {
 
 	if (!guild) return
 
-	const serverConfig = store.getConfig(guild)
+	const serverConfig = app.store.getConfig(guild)
 	const { prefix } = serverConfig
 	const content = message.content.trim()
 
@@ -36,16 +33,16 @@ function messageReceived(message: Message) {
 }
 
 async function start() {
-	await bot.login(token)
-	print('Logged in with token ' + token)
+	await client.login(token)
+	app.print('Logged in with token ' + token)
 
-	store.load()
+	app.load()
 
 	await app.tick()
-	bot.setInterval(app.tick, tickInterval)
-	bot.setInterval(() => store.save(), saveInterval)
+	client.setInterval(app.tick, tickInterval)
+	client.setInterval(() => app.save(), saveInterval)
 
-	print(await bot.generateInvite([]))
+	app.print(await client.generateInvite([]))
 
-	setupExitHandling(store)
+	setupExitHandling(app)
 }

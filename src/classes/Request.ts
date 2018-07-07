@@ -72,7 +72,7 @@ export default class Request {
 			// @ts-ignores
 			await msg.delete()
 		} catch (error) {
-			console.error(error)
+			// Can't delete own message, no further action needed
 		}
 	}
 
@@ -85,8 +85,8 @@ export default class Request {
 	async fail(req, command, err) {
 		const failMessage = `Trying to run \`${command}\` has failed`
 
-		console.error(failMessage)
-		console.error(err)
+		this.app.print(failMessage)
+		this.app.print(err)
 		await req.reply(failMessage)
 	}
 
