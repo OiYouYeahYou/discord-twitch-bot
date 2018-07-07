@@ -28,7 +28,8 @@ export class Twitch {
 				res.on('end', () => {
 					try {
 						const response = JSON.parse(body)
-						if (response.error) return resolve(response)
+						if (response.error)
+							return resolve(new APIError(response.error))
 
 						resolve(response)
 					} catch (err) {
