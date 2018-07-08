@@ -35,6 +35,9 @@ async function add(req: Request, content: string) {
 	const { store, guild } = req
 	const [name] = splitByFirstSpace(content)
 
+	if (!/^[a-zA-Z0-9_]{4,25}$/.test(name))
+		return req.send('You have provided an invlaid username')
+
 	if (store.streamerRecordExists(guild, name))
 		return req.send(name + ' is already in the list.')
 

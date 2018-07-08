@@ -200,6 +200,7 @@ test('add: prevents adding duplicates', async t => {
 
 	sendTest(t, 'statement that the streamer is already tracked', [streamer])
 })
+test.todo('add: prevent adding invalid username')
 
 test('list: lists all streamers and stheir online state', async t => {
 	const { req, sendTest } = MockRequest()
