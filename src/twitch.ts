@@ -1,19 +1,27 @@
-import { get } from 'https'
+import { get, RequestOptions } from 'https'
+import { IncomingMessage, ClientRequest } from 'http'
+import { URL } from 'url'
 
 export class Twitch {
 	private host = 'api.twitch.tv'
+	private _get: (
+		options: string | RequestOptions | URL,
+		callback?: (res: IncomingMessage) => void
+	) => ClientRequest
 
-	constructor(private twitchClientID: string) {}
+	constructor(private twitchClientID: string, { _get = get } = {}) {
+		this._get = _get
+	}
 
 	getStream(name: string) {
-		return this._get<IStreamRespone>(`streams/${name.trim()}`)
+		return this.get<IStreamRespone>(`streams/${name.trim()}`)
 	}
 
 	getChannel(name: string) {
-		return this._get<IChannelResponse>(`channels/${name.trim()}`)
+		return this.get<IChannelResponse>(`channels/${name.trim()}`)
 	}
 
-	_get<T>(endpoint: string): Promise<T | APIError> {
+	get<T>(endpoint: string): Promise<T | APIError> {
 		const path = `/kraken/${endpoint}`
 		const headers = {
 			'Client-ID': this.twitchClientID,
@@ -22,7 +30,7 @@ export class Twitch {
 		const opt = { host: this.host, path, headers }
 
 		return new Promise((resolve, reject) => {
-			const getter = get(opt, res => {
+			const getter = this._get(opt, res => {
 				var body = ''
 				res.on('data', chunk => (body += chunk))
 				res.on('end', () => {

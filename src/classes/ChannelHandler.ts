@@ -1,8 +1,8 @@
 import { TextChannel, Client } from 'discord.js'
 
 export class ChannelHandler {
-	constructor(readonly channelID: string, bot: Client) {
-		const channel = bot.channels.find('id', channelID)
+	constructor(readonly channelID: string, client: Client) {
+		const channel = client.channels.find('id', channelID)
 		if (!(channel instanceof TextChannel)) {
 			this.isMissing = false
 			return
@@ -33,5 +33,9 @@ export class ChannelHandler {
 	toRaw() {
 		// if (!this.isInvaild)
 		return this.channelID
+	}
+
+	toString() {
+		return this.name
 	}
 }

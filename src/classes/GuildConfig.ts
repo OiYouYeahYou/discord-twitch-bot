@@ -66,7 +66,7 @@ export class GuildConfig {
 		return this.outputs.length !== oldLength
 	}
 
-	recordsArray() {
+	streamerArray() {
 		return Object.values(this.channels)
 	}
 

@@ -23,6 +23,10 @@ export class StreamerRecord {
 		return this.online
 	}
 
+	get isOffline() {
+		return !this.online
+	}
+
 	setOffline() {
 		this.setter(false, 0)
 	}
