@@ -40,10 +40,7 @@ export default class Store {
 		this.configs = {}
 
 		for (const x in saveSate.configs)
-			this.configs[x] = new GuildConfig(
-				saveSate.configs[x],
-				this.app.client
-			)
+			this.configs[x] = new GuildConfig(saveSate.configs[x], this.app)
 	}
 
 	getConfig(guild: Guild) {

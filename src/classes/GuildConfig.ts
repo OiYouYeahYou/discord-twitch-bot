@@ -1,6 +1,7 @@
-import { GuildChannel, Client } from 'discord.js'
+import { GuildChannel, Client, Guild } from 'discord.js'
 import { StreamerRecord, IRawStreamerRecord } from './StreamerRecord'
 import { ChannelHandler } from './ChannelHandler'
+import App from './App'
 
 const defalutConfig = {
 	prefix: '!',
@@ -10,21 +11,25 @@ const defalutConfig = {
 }
 
 export class GuildConfig {
-	constructor(input: IRawGuildGonfig, private client: Client) {
+	constructor(input: IRawGuildGonfig, private app: App) {
 		this.id = input.id
 		this.prefix = input.prefix
 		this.role = input.role
+		this.client = app.client
 		this.outputs = input.outputs.map(
-			channel => new ChannelHandler(channel, client)
+			channel => new ChannelHandler(channel, this.client)
 		)
+		this.guild = this.client.guilds.find('id', this.id)
 
 		this.channels = {}
 		for (const id in input.channels) {
-			this.channels[id] = new StreamerRecord(input.channels[id])
+			this.channels[id] = new StreamerRecord(input.channels[id], this.app)
 		}
 	}
 
+	private client: Client
 	readonly id: string
+	readonly guild: Guild
 	prefix: string
 	role: string
 	outputs: ChannelHandler[]
@@ -36,7 +41,7 @@ export class GuildConfig {
 	}
 
 	addStreamer(name: string) {
-		this.channels[name] = StreamerRecord.create(name)
+		this.channels[name] = StreamerRecord.create(name, this.app)
 	}
 
 	removeStreamer(name: string) {
@@ -70,9 +75,9 @@ export class GuildConfig {
 		return Object.values(this.channels)
 	}
 
-	static create(id: string, bot: Client) {
+	static create(id: string, app: App) {
 		const config = Object.assign({ id }, defalutConfig)
-		return new this(config, bot)
+		return new this(config, app)
 	}
 
 	toRaw(): IRawGuildGonfig {

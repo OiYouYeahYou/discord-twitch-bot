@@ -1,10 +1,12 @@
+import App from './App'
+
 const defaultRecord = {
 	online: false,
 	current: 0,
 }
 
 export class StreamerRecord {
-	constructor(input: IRawStreamerRecord) {
+	constructor(input: IRawStreamerRecord, private app: App) {
 		this.name = input.name
 		this.online = input.online
 		this.current = input.current
@@ -44,9 +46,13 @@ export class StreamerRecord {
 		return this.current == stream._id
 	}
 
-	static create(name) {
+	getStream() {
+		return this.app.twitch.getStream(this.name)
+	}
+
+	static create(name, app: App) {
 		const config = Object.assign({ name }, defaultRecord)
-		return new this(config)
+		return new this(config, app)
 	}
 
 	toRaw(): IRawStreamerRecord {
