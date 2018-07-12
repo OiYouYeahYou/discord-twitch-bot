@@ -1,4 +1,5 @@
 import { TextChannel, Client } from 'discord.js'
+import { Sendable } from '../discord'
 
 export class ChannelHandler {
 	constructor(readonly channelID: string, client: Client) {
@@ -24,7 +25,7 @@ export class ChannelHandler {
 		return this.channel.name
 	}
 
-	send(message) {
+	send(message: Sendable) {
 		if (!this.isInvaild) return
 
 		return this.channel.send(message)

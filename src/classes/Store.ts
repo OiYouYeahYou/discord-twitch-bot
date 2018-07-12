@@ -52,7 +52,7 @@ export default class Store {
 	}
 
 	private addConfig(id) {
-		return (this.configs[id] = GuildConfig.create(id, this.app.client))
+		return (this.configs[id] = GuildConfig.create(id, this.app))
 	}
 
 	streamerRecordExists(guild: Guild, name: string) {

@@ -1,4 +1,4 @@
-import { RichEmbed } from 'discord.js'
+import { RichEmbed, MessageOptions, Attachment } from 'discord.js'
 import { IStream } from './twitch'
 
 export function Embed(stream: IStream) {
@@ -19,3 +19,10 @@ export function Embed(stream: IStream) {
 
 	return embed
 }
+
+export type Sendable =
+	| string
+	| string[]
+	| MessageOptions
+	| RichEmbed
+	| Attachment

@@ -91,7 +91,7 @@ type urlTemplate = string
 type WHAT = any
 
 export interface IStreamRespone {
-	readonly stream: IStream
+	readonly stream?: IStream
 }
 
 export interface IStream {

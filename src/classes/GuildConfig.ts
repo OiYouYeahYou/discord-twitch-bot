@@ -1,4 +1,4 @@
-import { GuildChannel, Client, Guild } from 'discord.js'
+import { GuildChannel, Client } from 'discord.js'
 import { StreamerRecord, IRawStreamerRecord } from './StreamerRecord'
 import { ChannelHandler } from './ChannelHandler'
 import App from './App'
@@ -19,7 +19,6 @@ export class GuildConfig {
 		this.outputs = input.outputs.map(
 			channel => new ChannelHandler(channel, this.client)
 		)
-		this.guild = this.client.guilds.find('id', this.id)
 
 		this.channels = {}
 		for (const id in input.channels) {
@@ -29,11 +28,14 @@ export class GuildConfig {
 
 	private client: Client
 	readonly id: string
-	readonly guild: Guild
 	prefix: string
 	role: string
 	outputs: ChannelHandler[]
 	channels: { [name: string]: StreamerRecord }
+
+	get guild() {
+		return this.client.guilds.find('id', this.id)
+	}
 
 	streamerRecordExists(name: string) {
 		const { channels } = this
