@@ -31,6 +31,14 @@ class MockApp {
 			),
 		}
 
+		this.client = {
+			guilds: {
+				find() {
+					return {}
+				},
+			},
+		}
+
 		this.twitch = {
 			getChannel(name) {
 				if (name === existingStreamer || name === unAddedStreamer) {
@@ -94,7 +102,8 @@ function MockRequest({ guildConfigData = {} } = {}) {
 
 	const app = new MockApp(sandbox)
 	const guildConfig = new GuildConfig(
-		Object.assign({}, defaultGuildConfig, guildConfigData)
+		Object.assign({}, defaultGuildConfig, guildConfigData),
+		app
 	)
 	const message = new MockMessage(sandbox)
 	const req = new Request(app, guildConfig, message, null, null)
